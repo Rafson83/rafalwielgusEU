@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import { RowDataPacket } from 'mysql2';
 
 export async function GET(
   request: NextRequest,
@@ -7,15 +8,13 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const post = await prisma.post.findUnique({
-      where: { slug: slug },
-    });
+    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts WHERE slug = ? LIMIT 1', [slug]);
 
-    if (!post) {
+    if (rows.length === 0) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    return NextResponse.json(post);
+    return NextResponse.json(rows[0]);
   } catch (error) {
     console.error('Error fetching post by slug:', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
