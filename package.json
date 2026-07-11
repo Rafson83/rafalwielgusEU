@@ -1,0 +1,11 @@
+{
+  "name": "rafalwielguseu",
+  "version": "1.0.0",
+  "description": "Strona w budowie - rafalwielgus.eu",
+  "main": "index.html",
+  "scripts": {
+    "start": "echo 'Static hosting ready'"
+  },
+  "dependencies": {},
+  "private": true
+}
