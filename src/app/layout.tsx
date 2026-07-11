@@ -1,15 +1,20 @@
-import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Playfair_Display, Inter } from 'next/font/google';
+import './globals.css';
 
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin", "latin-ext"],
+const playfair = Playfair_Display({
+  variable: '--font-serif',
+  subsets: ['latin', 'latin-ext'],
+});
+
+const inter = Inter({
+  variable: '--font-sans',
+  subsets: ['latin', 'latin-ext'],
 });
 
 export const metadata: Metadata = {
-  title: "rafalwielgus.eu | Strona w budowie",
-  description: "Mój osobisty blog już wkrótce. Odliczanie do startu!",
+  title: 'rafalwielgus.eu | Strona w budowie',
+  description: 'Mój osobisty blog już wkrótce. Odliczanie do startu!',
 };
 
 export default function RootLayout({
@@ -20,10 +25,11 @@ export default function RootLayout({
   return (
     <html
       lang="pl"
-      className={`${outfit.variable} h-full antialiased`}
+      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#faf6f0] text-[#1c1917]">
+        {children}
+      </body>
     </html>
   );
 }
-
