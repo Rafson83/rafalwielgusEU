@@ -3,7 +3,7 @@ import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-super-secret-key-change-me-in-env';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2a$10$7R15U8JtE9Bihm4XG97bduo7z5Mh9d7wB1fF/T3gC86bVp2K/Jp/G'; // Domyślne: "admin123"
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$bsZQMTrxD8MuCfUEAJynye/w9jRUC.GCKlVbz.3MQCE8Iv3kuceYi'; // Domyślne: "admin123"
 
 export async function POST(request: Request) {
   try {
