@@ -10,9 +10,10 @@ export default function Home() {
   const [progressWidth, setProgressWidth] = useState('0%');
 
   useEffect(() => {
-    // Exactly 7 days from initial load of this hook to keep the countdown persistent relative to site deployment
-    const totalDuration = 7 * 24 * 60 * 60 * 1000;
-    const targetDate = new Date().getTime() + totalDuration;
+    // Ustawienie stałej daty startu (np. 18 lipca 2026 r. o godzinie 12:00:00)
+    // Zapewni to, że licznik odlicza do tej samej daty u każdego użytkownika.
+    const targetDate = new Date('2026-07-18T12:00:00').getTime();
+    const totalDuration = 7 * 24 * 60 * 60 * 1000; // 7 dni w ms do kalkulacji paska postępu
 
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -37,8 +38,10 @@ export default function Home() {
       setMinutes(String(m).padStart(2, '0'));
       setSeconds(String(s).padStart(2, '0'));
 
-      const elapsed = totalDuration - distance;
-      const percentage = (elapsed / totalDuration) * 100;
+      // Pasek postępu odlicza od momentu wdrożenia (zakładając 7 dni jako 100%)
+      const startPoint = targetDate - totalDuration;
+      const elapsed = now - startPoint;
+      const percentage = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
       setProgressWidth(`${percentage}%`);
     };
 
