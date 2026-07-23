@@ -10,9 +10,9 @@ export default function Home() {
   const [progressWidth, setProgressWidth] = useState('0%');
 
   useEffect(() => {
-    // Ustawienie stałej daty startu (np. 18 lipca 2026 r. o godzinie 12:00:00)
+    // Ustawienie nowej stałej daty startu na 30 lipca 2026 r. o godzinie 18:00:00
     // Zapewni to, że licznik odlicza do tej samej daty u każdego użytkownika.
-    const targetDate = new Date('2026-07-18T12:00:00').getTime();
+    const targetDate = new Date('2026-07-30T18:00:00').getTime();
     const totalDuration = 7 * 24 * 60 * 60 * 1000; // 7 dni w ms do kalkulacji paska postępu
 
     const updateCountdown = () => {
