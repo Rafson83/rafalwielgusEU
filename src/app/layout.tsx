@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'rafalwielgus.eu | Strona w budowie',
-  description: 'Mój osobisty blog już wkrótce. Odliczanie do startu!',
+  title: 'Rafał Wielgus | Myślę. Buduję. Piszę.',
+  description: 'Osobista strona Rafała Wielgusa. O ludziach, technologii i pracy.',
 };
 
 export default function RootLayout({

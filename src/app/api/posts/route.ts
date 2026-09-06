@@ -1,24 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { ensurePostsTable } from '@/lib/posts';
 import { RowDataPacket } from 'mysql2';
 
 // GET /api/posts - pobierz listę opublikowanych postów
 export async function GET() {
   try {
-    // Automatycznie sprawdzamy i tworzymy tabelę posts, jeśli nie istnieje
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS posts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        slug VARCHAR(255) UNIQUE NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        category VARCHAR(100) NOT NULL,
-        published BOOLEAN DEFAULT FALSE,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        publishedAt TIMESTAMP NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
+    await ensurePostsTable();
 
     const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts WHERE published = 1 ORDER BY createdAt DESC');
     return NextResponse.json(rows);
@@ -32,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, slug, content, category, published } = body;
+    const { title, slug, content, category, tags, seoTitle, seoDescription, thumbnailUrl, published } = body;
 
     if (!title || !slug || !content || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -41,16 +29,21 @@ export async function POST(request: Request) {
     const isPublished = published ? 1 : 0;
     const publishedAt = published ? new Date() : null;
 
+    await ensurePostsTable();
+
     // Bezpieczne wstawienie rekordu
     await db.query(
-      'INSERT INTO posts (title, slug, content, category, published, publishedAt) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, slug, content, category, isPublished, publishedAt]
+      'INSERT INTO posts (title, slug, content, category, tags, seoTitle, seoDescription, thumbnailUrl, published, publishedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, slug, content, category, tags || null, seoTitle || null, seoDescription || null, thumbnailUrl || null, isPublished, publishedAt]
     );
 
     return NextResponse.json({ success: true }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating post:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    const errorCode = typeof error === 'object' && error !== null && 'code' in error
+      ? error.code
+      : undefined;
+    if (errorCode === 'ER_DUP_ENTRY') {
       return NextResponse.json({ error: 'A post with this slug already exists' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });

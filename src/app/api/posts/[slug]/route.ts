@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { ensurePostsTable } from '@/lib/posts';
 import { RowDataPacket } from 'mysql2';
 
 export async function GET(
@@ -8,6 +9,7 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    await ensurePostsTable();
     const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts WHERE slug = ? LIMIT 1', [slug]);
 
     if (rows.length === 0) {

@@ -10,6 +10,10 @@ interface Post {
   slug: string;
   content: string;
   category: string;
+  tags?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  thumbnailUrl?: string;
   createdAt: string;
 }
 
@@ -25,6 +29,27 @@ export default function BlogPost() {
         if (res.ok) {
           const data = await res.json();
           setPost(data);
+          document.title = data.seoTitle || `${data.title} | Rafał Wielgus`;
+
+          if (data.seoDescription) {
+            let description = document.querySelector('meta[name="description"]');
+            if (!description) {
+              description = document.createElement('meta');
+              description.setAttribute('name', 'description');
+              document.head.appendChild(description);
+            }
+            description.setAttribute('content', data.seoDescription);
+          }
+
+          if (data.thumbnailUrl) {
+            let image = document.querySelector('meta[property="og:image"]');
+            if (!image) {
+              image = document.createElement('meta');
+              image.setAttribute('property', 'og:image');
+              document.head.appendChild(image);
+            }
+            image.setAttribute('content', data.thumbnailUrl);
+          }
         }
       } catch (error) {
         console.error('Error loading post:', error);
@@ -84,6 +109,20 @@ export default function BlogPost() {
             </div>
             <div className="w-24 h-1 bg-[#1c1917] mx-auto mt-6" />
           </header>
+
+          {post.thumbnailUrl && (
+            <img
+              src={post.thumbnailUrl}
+              alt=""
+              className="h-auto max-h-[420px] w-full object-cover border border-[#1c1917]/10"
+            />
+          )}
+
+          {post.tags && (
+            <div className="flex flex-wrap justify-center gap-3 font-sans text-[10px] uppercase tracking-wider text-stone-500">
+              {post.tags.split(',').map((tag) => <span key={tag.trim()}>#{tag.trim()}</span>)}
+            </div>
+          )}
 
           {/* Newspaper content simulation with columns */}
           <div className="text-base md:text-lg text-stone-800 leading-relaxed text-justify space-y-6 md:columns-2 md:gap-8 pt-4 border-t border-[#1c1917]/10">

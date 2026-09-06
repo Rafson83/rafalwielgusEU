@@ -1,106 +1,102 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function Home() {
-  const [days, setDays] = useState('07');
-  const [hours, setHours] = useState('00');
-  const [minutes, setMinutes] = useState('00');
-  const [seconds, setSeconds] = useState('00');
-  const [progressWidth, setProgressWidth] = useState('0%');
-
-  useEffect(() => {
-    // Ustawienie nowej stałej daty startu na 30 lipca 2026 r. o godzinie 18:00:00
-    // Zapewni to, że licznik odlicza do tej samej daty u każdego użytkownika.
-    const targetDate = new Date('2026-07-30T18:00:00').getTime();
-    const totalDuration = 7 * 24 * 60 * 60 * 1000; // 7 dni w ms do kalkulacji paska postępu
-
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance < 0) {
-        setDays('00');
-        setHours('00');
-        setMinutes('00');
-        setSeconds('00');
-        setProgressWidth('100%');
-        return;
-      }
-
-      const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setDays(String(d).padStart(2, '0'));
-      setHours(String(h).padStart(2, '0'));
-      setMinutes(String(m).padStart(2, '0'));
-      setSeconds(String(s).padStart(2, '0'));
-
-      // Pasek postępu odlicza od momentu wdrożenia (zakładając 7 dni jako 100%)
-      const startPoint = targetDate - totalDuration;
-      const elapsed = now - startPoint;
-      const percentage = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
-      setProgressWidth(`${percentage}%`);
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <main className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#0b0f19] px-4">
-      {/* Background gradients */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/5 rounded-full blur-[100px] pointer-events-none" />
+    <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <header className="flex items-center justify-between border-b border-[#181817] py-5">
+          <Link href="/" className="font-sans text-sm font-bold uppercase tracking-[0.22em]">
+            RW<span className="text-[#e85d3f]">.</span>
+          </Link>
+          <nav className="flex items-center gap-5 font-sans text-xs font-bold uppercase tracking-[0.14em] sm:gap-8">
+            <Link href="#o-mnie" className="transition-colors hover:text-[#e85d3f]">O mnie</Link>
+            <Link href="/blog" className="transition-colors hover:text-[#e85d3f]">Blog</Link>
+            <Link href="#kontakt" className="border-b-2 border-[#e85d3f] pb-1 transition-colors hover:text-[#e85d3f]">Kontakt</Link>
+          </nav>
+        </header>
 
-      <div className="max-w-[600px] w-full text-center py-12 px-8 bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.3),_0_0_50px_rgba(99,102,241,0.15)] z-10 animate-fade-in">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent tracking-tight">
-          rafalwielgus.eu
-        </h1>
-        <p className="text-base md:text-lg text-gray-400 mb-10 leading-relaxed">
-          Trwają prace nad moim nowym blogiem osobistym. <br /> Wracam już niebawem z ciekawymi wpisami!
-        </p>
+        <section className="grid min-h-[calc(100vh-81px)] items-center gap-12 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
+          <div>
+            <p className="mb-7 font-sans text-xs font-bold uppercase tracking-[0.25em] text-[#e85d3f]">Rafał Wielgus / 2026</p>
+            <h1 className="max-w-5xl font-serif text-[clamp(3.5rem,9vw,8.5rem)] font-black leading-[0.84] tracking-[-0.055em]">
+              Myślę.<br />
+              <span className="text-[#e85d3f]">Buduję.</span><br />
+              Piszę.
+            </h1>
+            <p className="mt-10 max-w-lg font-sans text-base leading-7 text-[#514f49] sm:text-lg">
+              O ludziach, technologii i decyzjach, które robią różnicę. Bez pozy eksperta. Z ciekawością i konkretem.
+            </p>
+            <div className="mt-10 flex flex-wrap items-center gap-6 font-sans text-sm font-bold">
+              <Link href="/blog" className="bg-[#181817] px-6 py-4 text-white transition-transform hover:-translate-y-1">
+                Czytaj blog <span className="ml-5 text-[#e85d3f]">→</span>
+              </Link>
+              <Link href="#o-mnie" className="border-b border-[#181817] pb-1 transition-colors hover:border-[#e85d3f] hover:text-[#e85d3f]">
+                Poznaj mnie
+              </Link>
+            </div>
+          </div>
 
-        <div className="flex justify-center gap-4 mb-10">
-          <div className="bg-white/[0.02] border border-white/[0.08] p-4 rounded-2xl min-w-[80px] transition-all hover:-translate-y-1 hover:border-indigo-500 group">
-            <span className="text-3xl font-extrabold block leading-none bg-gradient-to-br from-white to-purple-400 bg-clip-text text-transparent">
-              {days}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500 mt-1 block">Dni</span>
+          <div className="relative mx-auto w-full max-w-md lg:justify-self-end">
+            <div className="aspect-[4/5] rotate-2 bg-[#e85d3f] p-5 shadow-[14px_14px_0_#181817] sm:p-7">
+              <div className="flex h-full flex-col justify-between border border-white/60 p-5 text-white sm:p-7">
+                <div className="flex items-start justify-between font-sans text-[10px] font-bold uppercase tracking-[0.2em]">
+                  <span>Notatnik<br />osobisty</span>
+                  <span>01 / 01</span>
+                </div>
+                <p className="font-serif text-4xl font-bold leading-[0.92] tracking-[-0.04em] sm:text-5xl">
+                  Dobre pytania są warte więcej niż szybkie odpowiedzi.
+                </p>
+                <div className="flex items-end justify-between font-sans text-xs font-bold uppercase tracking-[0.15em]">
+                  <span>Rafał Wielgus</span>
+                  <span>R.W.</span>
+                </div>
+              </div>
+            </div>
+            <span className="absolute -bottom-10 -left-5 font-serif text-7xl text-[#181817]/10 sm:-left-12">01</span>
           </div>
-          <div className="bg-white/[0.02] border border-white/[0.08] p-4 rounded-2xl min-w-[80px] transition-all hover:-translate-y-1 hover:border-indigo-500 group">
-            <span className="text-3xl font-extrabold block leading-none bg-gradient-to-br from-white to-purple-400 bg-clip-text text-transparent">
-              {hours}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500 mt-1 block">Godz</span>
-          </div>
-          <div className="bg-white/[0.02] border border-white/[0.08] p-4 rounded-2xl min-w-[80px] transition-all hover:-translate-y-1 hover:border-indigo-500 group">
-            <span className="text-3xl font-extrabold block leading-none bg-gradient-to-br from-white to-purple-400 bg-clip-text text-transparent">
-              {minutes}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500 mt-1 block">Min</span>
-          </div>
-          <div className="bg-white/[0.02] border border-white/[0.08] p-4 rounded-2xl min-w-[80px] transition-all hover:-translate-y-1 hover:border-indigo-500 group">
-            <span className="text-3xl font-extrabold block leading-none bg-gradient-to-br from-white to-purple-400 bg-clip-text text-transparent">
-              {seconds}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500 mt-1 block">Sek</span>
-          </div>
-        </div>
+        </section>
 
-        <div className="w-full h-1.5 bg-white/5 rounded-full mb-8 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-1000 ease-out"
-            style={{ width: progressWidth }}
-          />
-        </div>
+        <section id="o-mnie" className="grid gap-8 border-t border-[#181817] py-16 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div>
+            <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#e85d3f]">01 / O mnie</p>
+            <h2 className="mt-5 max-w-sm font-serif text-4xl font-bold leading-none tracking-[-0.04em] sm:text-5xl">Nie interesuje mnie robienie hałasu.</h2>
+          </div>
+          <div className="max-w-2xl font-sans text-lg leading-8 text-[#514f49]">
+            <p>Interesuje mnie to, co zostaje, kiedy hałas ucichnie: sposób myślenia, jakość pracy i relacje, które wytrzymują próbę czasu.</p>
+            <p className="mt-6">Ten blog jest miejscem na rzeczy niedokończone, ale ważne. Na obserwacje z pracy, rozmowy o rozwoju i narzędzia, które pomagają żyć odrobinę mądrzej.</p>
+          </div>
+        </section>
 
-        <div className="text-xs md:text-sm text-gray-400 border-t border-white/[0.08] pt-6">
-          Do zobaczenia za <span className="text-indigo-400 font-semibold">7 dni</span>! &copy; {new Date().getFullYear()} Rafał Wielgus
-        </div>
+        <section className="border-t border-[#181817] py-16 sm:py-20">
+          <div className="mb-10 flex items-end justify-between gap-5">
+            <div>
+              <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#e85d3f]">02 / Kierunki</p>
+              <h2 className="mt-4 font-serif text-4xl font-bold tracking-[-0.04em] sm:text-5xl">O czym piszę</h2>
+            </div>
+            <span className="hidden font-sans text-xs font-bold uppercase tracking-[0.15em] text-[#514f49] sm:block">Trzy obszary</span>
+          </div>
+          <div className="grid border-t border-[#181817] md:grid-cols-3">
+            {[
+              ['01', 'Psychologia', 'Jak rozumieć siebie, ludzi i decyzje, które podejmujemy każdego dnia.'],
+              ['02', 'Technologia', 'Narzędzia są ciekawe. Jeszcze ciekawsze jest to, co dzięki nim tworzymy.'],
+              ['03', 'Praca', 'O skupieniu, odpowiedzialności i budowaniu rzeczy, z których można być dumnym.'],
+            ].map(([number, title, description]) => (
+              <article key={number} className="border-b border-[#181817] py-7 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0">
+                <span className="font-sans text-xs font-bold text-[#e85d3f]">{number}</span>
+                <h3 className="mt-12 font-serif text-3xl font-bold tracking-[-0.03em]">{title}</h3>
+                <p className="mt-4 font-sans text-sm leading-6 text-[#514f49]">{description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <footer id="kontakt" className="flex flex-col justify-between gap-8 border-t border-[#181817] py-10 font-sans sm:flex-row sm:items-end">
+          <div>
+            <p className="font-serif text-3xl font-bold tracking-[-0.04em]">Porozmawiajmy.</p>
+            <a href="mailto:hello@rafalwielgus.eu" className="mt-2 inline-block text-sm text-[#514f49] underline decoration-[#e85d3f] underline-offset-4 hover:text-[#e85d3f]">hello@rafalwielgus.eu</a>
+          </div>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#514f49]">© 2026 Rafał Wielgus</p>
+        </footer>
       </div>
     </main>
   );

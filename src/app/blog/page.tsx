@@ -9,6 +9,7 @@ interface Post {
   slug: string;
   content: string;
   category: string;
+  tags?: string;
   createdAt: string;
 }
 
@@ -39,28 +40,28 @@ export default function BlogList() {
         {/* Newspaper Header */}
         <header className="text-center mb-8">
           <div className="border-b-[4px] border-[#1c1917] pb-4">
-            <h1 className="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight leading-none mb-2">
-              Głos Milenialsa
+              <h1 className="font-serif text-5xl md:text-7xl font-black uppercase tracking-tight leading-none mb-2">
+                Rafał Wielgus / Blog
             </h1>
             <p className="font-serif italic text-lg text-stone-600">
-              „Najbardziej wykształcone pokolenie, które wreszcie przestało się bać opini innych”
+                „Notatki o myśleniu, pracy i budowaniu rzeczy, które mają znaczenie”
             </p>
           </div>
           
           <div className="flex justify-between items-center py-2 border-b-[1px] border-[#1c1917] text-xs font-sans uppercase font-bold tracking-widest text-stone-600">
-            <span>Rok I &bull; Wydanie 1</span>
+              <span>Notatki &bull; Wydanie 1</span>
             <span>{new Date().toLocaleDateString('pl-PL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <span>Cena: Bezcenne (Wiedza & Doświadczenie)</span>
+              <span>Bez pośpiechu. Bez pozy.</span>
           </div>
         </header>
 
         {loading ? (
           <div className="text-center py-20 font-sans text-stone-500">
-            Drukujemy wydanie... Proszę czekać.
+              Ładuję najnowsze teksty...
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 border-[3px] border-double border-[#1c1917] p-8">
-            <h3 className="text-2xl font-bold mb-2">Pierwszy numer w przygotowaniu</h3>
+              <h3 className="text-2xl font-bold mb-2">Pierwsze teksty w przygotowaniu</h3>
             <p className="font-sans text-sm text-stone-600">
               Redakcja pracuje nad artykułami z zakresu psychologii, biznesu i technologii. Pierwsze teksty pojawią się już niebawem!
             </p>
@@ -86,6 +87,11 @@ export default function BlogList() {
                     <p className="font-sans text-xs text-stone-500">
                       Opublikowano: {new Date(post.createdAt).toLocaleDateString('pl-PL')}
                     </p>
+                    {post.tags && (
+                      <div className="flex flex-wrap gap-2 pt-1 font-sans text-[10px] uppercase tracking-wider text-stone-500">
+                        {post.tags.split(',').map((tag) => <span key={tag.trim()}>#{tag.trim()}</span>)}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Dynamic newspaper column simulator */}

@@ -8,6 +8,7 @@ interface Post {
   title: string;
   slug: string;
   category: string;
+  tags?: string;
   published: boolean;
   createdAt: string;
 }
@@ -29,8 +30,12 @@ export default function AdminDashboard() {
   // Post Form State
   const [postTitle, setPostTitle] = useState('');
   const [postSlug, setPostSlug] = useState('');
-  const [postCategory, setPostCategory] = useState('programowanie');
+  const [postCategory, setPostCategory] = useState('psychologia');
   const [postContent, setPostContent] = useState('');
+  const [postTags, setPostTags] = useState('');
+  const [postSeoTitle, setPostSeoTitle] = useState('');
+  const [postSeoDescription, setPostSeoDescription] = useState('');
+  const [postThumbnailUrl, setPostThumbnailUrl] = useState('');
   const [postPublished, setPostPublished] = useState(false);
 
   // Project Form State
@@ -61,7 +66,11 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    const loadData = async () => {
+      await fetchData();
+    };
+
+    void loadData();
   }, []);
 
   const handleLogout = async () => {
@@ -98,6 +107,10 @@ export default function AdminDashboard() {
           slug: postSlug,
           content: postContent,
           category: postCategory,
+          tags: postTags,
+          seoTitle: postSeoTitle,
+          seoDescription: postSeoDescription,
+          thumbnailUrl: postThumbnailUrl,
           published: postPublished,
         }),
       });
@@ -109,10 +122,14 @@ export default function AdminDashboard() {
       setPostTitle('');
       setPostSlug('');
       setPostContent('');
+      setPostTags('');
+      setPostSeoTitle('');
+      setPostSeoDescription('');
+      setPostThumbnailUrl('');
       setPostPublished(false);
       fetchData();
-    } catch (err: any) {
-      setMessage({ text: err.message, type: 'error' });
+    } catch (err: unknown) {
+      setMessage({ text: err instanceof Error ? err.message : 'Nie udało się dodać artykułu', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -144,8 +161,8 @@ export default function AdminDashboard() {
       setProjectTech('');
       setProjectLink('');
       fetchData();
-    } catch (err: any) {
-      setMessage({ text: err.message, type: 'error' });
+    } catch (err: unknown) {
+      setMessage({ text: err instanceof Error ? err.message : 'Nie udało się dodać projektu', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -248,11 +265,9 @@ export default function AdminDashboard() {
                       onChange={(e) => setPostCategory(e.target.value)}
                       className="w-full bg-[#0b0f19] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
                     >
-                      <option value="psychologia">Psychologia (Psychelandia)</option>
-                      <option value="biznes">Biznes & Zarządzanie</option>
-                      <option value="sprzedaz">Sprzedaż</option>
-                      <option value="elektronika">Elektronika & Energetyka</option>
-                      <option value="programowanie">Programowanie & IT</option>
+                      <option value="psychologia">Psychologia</option>
+                      <option value="technologia">Technologia</option>
+                      <option value="praca">Praca</option>
                     </select>
                   </div>
                   <div className="flex items-center pt-8">
@@ -278,6 +293,56 @@ export default function AdminDashboard() {
                     placeholder="Wpisz treść artykułu..."
                     className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl p-4 text-sm focus:border-indigo-500 outline-none text-white transition-all font-mono"
                   />
+                </div>
+
+                <div className="border-t border-white/5 pt-6">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-300 mb-4">Widoczność w wyszukiwarce</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Tagi</label>
+                      <input
+                        type="text"
+                        value={postTags}
+                        onChange={(e) => setPostTags(e.target.value)}
+                        placeholder="np. skupienie, rozwój, praca"
+                        className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
+                      />
+                      <p className="mt-2 text-[11px] text-gray-500">Oddziel tagi przecinkami.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Miniaturka (URL)</label>
+                      <input
+                        type="url"
+                        value={postThumbnailUrl}
+                        onChange={(e) => setPostThumbnailUrl(e.target.value)}
+                        placeholder="https://.../obrazek.jpg"
+                        className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div>
+                      <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">SEO title</label>
+                      <input
+                        type="text"
+                        value={postSeoTitle}
+                        onChange={(e) => setPostSeoTitle(e.target.value)}
+                        maxLength={255}
+                        placeholder="Tytuł widoczny w Google"
+                        className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">SEO description</label>
+                      <textarea
+                        rows={3}
+                        value={postSeoDescription}
+                        onChange={(e) => setPostSeoDescription(e.target.value)}
+                        placeholder="Krótki opis wyniku wyszukiwania"
+                        className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl p-4 text-sm focus:border-indigo-500 outline-none text-white transition-all resize-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <button
