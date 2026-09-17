@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { getProductBySlug } from '@/lib/products';
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
-  const product = getProductBySlug(slug);
+  const isPreview = searchParams.get('preview') === 'admin' || searchParams.get('preview') === 'true';
+  const product = getProductBySlug(slug, { includeDrafts: isPreview });
 
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -54,6 +56,21 @@ export default function ProductDetailPage() {
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
+        {product && (product.isDraft || product.status === 'Szkic') && (
+          <div className="mt-4 border-2 border-amber-600 bg-amber-500/10 p-4 text-amber-950">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <p className="font-sans text-xs font-bold uppercase tracking-wider text-amber-900">
+                  Tryb podglądu szablonu roboczego (Szkic ukryty przed czytelnikami)
+                </p>
+                <p className="mt-0.5 font-sans text-xs text-amber-800">
+                  Ten produkt nie jest widoczny w publicznym katalogu. Gdy będziesz gotowy do startu kampanii, przejdź do panelu administratora i zmień jego status na „W przygotowaniu”.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Back Link */}
         <div className="pt-8">

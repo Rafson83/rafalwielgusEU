@@ -21,11 +21,31 @@ interface Project {
   link?: string;
 }
 
+interface ProductItem {
+  id: string;
+  slug: string;
+  title: string;
+  headline: string;
+  tagline: string;
+  category: string;
+  status: string;
+  statusLabel: string;
+  price: string;
+  priceNote?: string;
+  badge: string;
+  description: string;
+  isFlagship?: boolean;
+  isDraft?: boolean;
+  modules?: { number: string; title: string; lessons: string[] }[];
+  outcomes?: { title: string; description: string }[];
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'posts' | 'projects'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'projects' | 'products'>('posts');
   const [posts, setPosts] = useState<Post[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
   
   // Post Form State
   const [postTitle, setPostTitle] = useState('');
@@ -47,7 +67,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // Fetch list of current posts/projects
+  // Fetch list of current posts/projects/products
   const fetchData = async () => {
     try {
       const postsRes = await fetch('/api/posts');
@@ -60,8 +80,40 @@ export default function AdminDashboard() {
         const projData = await projRes.json();
         setProjects(projData);
       }
+      const prodRes = await fetch('/api/products?all=true');
+      if (prodRes.ok) {
+        const prodData = await prodRes.json();
+        setProducts(prodData);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+    }
+  };
+
+  const handleProductStatusChange = async (slug: string, newStatus: string) => {
+    setLoading(true);
+    setMessage({ text: '', type: '' });
+    try {
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, status: newStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Nie udało się zmienić statusu');
+
+      setMessage({
+        text: `Status produktu zaktualizowany na: "${newStatus}".`,
+        type: 'success',
+      });
+      await fetchData();
+    } catch (err: unknown) {
+      setMessage({
+        text: err instanceof Error ? err.message : 'Błąd zapisu statusu',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -222,10 +274,172 @@ export default function AdminDashboard() {
           >
             Projekty
           </button>
+          <button
+            onClick={() => { setActiveTab('products'); setMessage({ text: '', type: '' }); }}
+            className={`px-6 py-2.5 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2 ${
+              activeTab === 'products'
+                ? 'bg-indigo-600 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                : 'bg-white/[0.02] border-white/[0.08] text-gray-400 hover:text-white'
+            }`}
+          >
+            <span>Produkty & Szkice Kursów</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              {products.filter((p) => p.status === 'Szkic' || p.isDraft).length} szkice
+            </span>
+          </button>
         </div>
 
         {/* Forms & Lists Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {activeTab === 'products' ? (
+          <div className="space-y-6">
+            <div className="bg-white/[0.02] border border-white/[0.08] p-6 rounded-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <span>Katalog Kursów, Produktów & Kampanii Startowych</span>
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-1 max-w-2xl leading-relaxed">
+                    Szablony ze statusem <span className="text-amber-400 font-semibold">🔒 Szkic</span> są ukryte przed czytelnikami w katalogu publicznym. Kiedy zdecydujesz się wystartować z kampanią danego kursu, przełącz jego status na <span className="text-sky-400 font-semibold">🚀 W przygotowaniu</span>, a strona natychmiast pojawi się na blogu i umożliwi zbieranie zapisów na listę oczekujących.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                    Wszystkich: <strong className="text-white">{products.length}</strong>
+                  </span>
+                  <span className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                    Szkice (ukryte): <strong className="text-amber-200">{products.filter((p) => p.status === 'Szkic' || p.isDraft).length}</strong>
+                  </span>
+                  <span className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                    Widoczne na blogu: <strong className="text-emerald-200">{products.filter((p) => p.status !== 'Szkic' && !p.isDraft).length}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {products.map((prod) => {
+                  const isDraft = prod.status === 'Szkic' || prod.isDraft;
+                  return (
+                    <div
+                      key={prod.id}
+                      className={`p-6 rounded-2xl border transition-all flex flex-col justify-between ${
+                        isDraft
+                          ? 'bg-amber-950/10 border-amber-500/30 hover:border-amber-500/50'
+                          : 'bg-white/[0.02] border-white/[0.08] hover:border-indigo-500/40'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${
+                                isDraft
+                                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                                  : prod.status === 'W przygotowaniu'
+                                  ? 'bg-sky-500/20 border-sky-500/40 text-sky-300'
+                                  : prod.status === 'W realizacji'
+                                  ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                                  : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                              }`}
+                            >
+                              {isDraft ? '🔒 Szkic (Ukryty)' : `🚀 ${prod.status}`}
+                            </span>
+                            <span className="text-[10px] uppercase font-semibold text-gray-400 bg-white/5 px-2 py-1 rounded">
+                              {prod.category}
+                            </span>
+                            {prod.isFlagship && (
+                              <span className="text-[10px] uppercase font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded">
+                                Flagowy
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs font-mono font-bold text-gray-300">
+                            {prod.price}
+                          </span>
+                        </div>
+
+                        <h3 className="text-lg font-bold text-white mb-1">
+                          {prod.title}
+                        </h3>
+                        <p className="text-xs italic text-gray-400 mb-3">
+                          „{prod.headline}”
+                        </p>
+                        <p className="text-xs text-gray-400 leading-relaxed mb-4 line-clamp-3">
+                          {prod.description}
+                        </p>
+
+                        {prod.modules && prod.modules.length > 0 && (
+                          <div className="border-t border-white/5 pt-3 mb-4">
+                            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                              Struktura programu ({prod.modules.length} moduły):
+                            </p>
+                            <ul className="space-y-1">
+                              {prod.modules.map((m) => (
+                                <li key={m.number} className="text-[11px] text-gray-400 flex items-center gap-2 truncate">
+                                  <span className="font-mono text-gray-500">[{m.number}]</span>
+                                  <span className="truncate">{m.title}</span>
+                                  <span className="text-[10px] text-gray-500">({m.lessons.length} lekcji)</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <label className="text-[11px] text-gray-400 font-semibold">Status:</label>
+                          <select
+                            value={prod.status}
+                            onChange={(e) => handleProductStatusChange(prod.slug, e.target.value)}
+                            disabled={loading}
+                            className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-indigo-500 outline-none"
+                          >
+                            <option value="Szkic" className="bg-[#111827] text-amber-300">🔒 Szkic (Ukryty)</option>
+                            <option value="W przygotowaniu" className="bg-[#111827] text-sky-300">🚀 W przygotowaniu (Katalog)</option>
+                            <option value="W realizacji" className="bg-[#111827] text-indigo-300">⏳ W realizacji</option>
+                            <option value="Dostępny" className="bg-[#111827] text-emerald-300">✅ Dostępny</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`/produkty/${prod.slug}?preview=admin`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 transition-all flex items-center gap-1.5"
+                          >
+                            <span>👁</span>
+                            <span>Podgląd</span>
+                          </a>
+
+                          {isDraft ? (
+                            <button
+                              onClick={() => handleProductStatusChange(prod.slug, 'W przygotowaniu')}
+                              disabled={loading}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1"
+                            >
+                              <span>🚀</span>
+                              <span>Wystartuj kampanię</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleProductStatusChange(prod.slug, 'Szkic')}
+                              disabled={loading}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 transition-all"
+                            >
+                              Ukryj do szkiców
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Creator Form */}
           <div className="lg:col-span-2 bg-white/[0.02] border border-white/[0.08] p-6 rounded-2xl">
             {activeTab === 'posts' ? (
@@ -456,6 +670,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
       </div>
     </main>
   );

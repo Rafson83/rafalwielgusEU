@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getAllProducts } from '@/lib/products';
+import { getEffectiveProducts } from '@/lib/products-server';
 
 export const metadata: Metadata = {
   title: 'Moje Produkty — Rafał Wielgus',
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój. Poznaj kurs Kod Kariery.',
 };
 
-export default function ProductsPage() {
-  const products = getAllProducts();
+export default async function ProductsPage() {
+  const products = await getEffectiveProducts(false);
   const flagship = products.find((p) => p.isFlagship);
   const otherProducts = products.filter((p) => !p.isFlagship);
 
