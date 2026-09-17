@@ -1,19 +1,12 @@
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <header className="flex items-center justify-between border-b border-[#181817] py-5">
-          <Link href="/" className="font-sans text-sm font-bold uppercase tracking-[0.22em]">
-            RW<span className="text-[#e85d3f]">.</span>
-          </Link>
-          <nav className="flex items-center gap-5 font-sans text-xs font-bold uppercase tracking-[0.14em] sm:gap-8">
-            <Link href="#o-mnie" className="transition-colors hover:text-[#e85d3f]">O mnie</Link>
-            <Link href="/blog" className="transition-colors hover:text-[#e85d3f]">Blog</Link>
-            <Link href="#kontakt" className="border-b-2 border-[#e85d3f] pb-1 transition-colors hover:text-[#e85d3f]">Kontakt</Link>
-          </nav>
-        </header>
+        <Navbar />
 
         <section className="grid min-h-[calc(100vh-81px)] items-center gap-12 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
           <div>
@@ -30,8 +23,8 @@ export default function Home() {
               <Link href="/blog" className="bg-[#181817] px-6 py-4 text-white transition-transform hover:-translate-y-1">
                 Czytaj blog <span className="ml-5 text-[#e85d3f]">→</span>
               </Link>
-              <Link href="#o-mnie" className="border-b border-[#181817] pb-1 transition-colors hover:border-[#e85d3f] hover:text-[#e85d3f]">
-                Poznaj mnie
+              <Link href="/o-mnie" className="border-b border-[#181817] pb-1 transition-colors hover:border-[#e85d3f] hover:text-[#e85d3f]">
+                Poznaj moją historię
               </Link>
             </div>
           </div>
@@ -59,11 +52,25 @@ export default function Home() {
         <section id="o-mnie" className="grid gap-8 border-t border-[#181817] py-16 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
             <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#e85d3f]">01 / O mnie</p>
-            <h2 className="mt-5 max-w-sm font-serif text-4xl font-bold leading-none tracking-[-0.04em] sm:text-5xl">Nie interesuje mnie robienie hałasu.</h2>
+            <h2 className="mt-5 max-w-md font-serif text-4xl font-bold leading-tight tracking-[-0.04em] sm:text-5xl">
+              Od układów scalonych i bankructwa po AI i psychologię.
+            </h2>
           </div>
           <div className="max-w-2xl font-sans text-lg leading-8 text-[#514f49]">
-            <p>Interesuje mnie to, co zostaje, kiedy hałas ucichnie: sposób myślenia, jakość pracy i relacje, które wytrzymują próbę czasu.</p>
-            <p className="mt-6">Ten blog jest miejscem na rzeczy niedokończone, ale ważne. Na obserwacje z pracy, rozmowy o rozwoju i narzędzia, które pomagają żyć odrobinę mądrzej.</p>
+            <p>
+              Jestem technikiem elektronikiem i pasjonatem IT od podstawówki. Przeżyłem spektakularne bankructwo własnego serwisu AGD, poznałem zwinny rygor jakości w korporacji, a studia psychologiczne nauczyły mnie empatii.
+            </p>
+            <p className="mt-4">
+              Dziś zmieniam świat w dziale utrzymania ruchu w firmie recyklingowej, zgłębiając automatykę przemysłową i sztuczną inteligencję. Tworzę treści i narzędzia wspierające filozofię <strong>Long-Life Learning</strong> oraz interdyscyplinarny rozwój człowieka.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/o-mnie"
+                className="inline-flex items-center gap-3 bg-[#181817] px-6 py-3.5 font-sans text-sm font-bold text-white transition-transform hover:-translate-y-1"
+              >
+                Przeczytaj pełną historię i poznaj moją drogę <span className="text-[#e85d3f]">&rarr;</span>
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -90,13 +97,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer id="kontakt" className="flex flex-col justify-between gap-8 border-t border-[#181817] py-10 font-sans sm:flex-row sm:items-end">
-          <div>
-            <p className="font-serif text-3xl font-bold tracking-[-0.04em]">Porozmawiajmy.</p>
-            <a href="mailto:hello@rafalwielgus.eu" className="mt-2 inline-block text-sm text-[#514f49] underline decoration-[#e85d3f] underline-offset-4 hover:text-[#e85d3f]">hello@rafalwielgus.eu</a>
-          </div>
-          <p className="text-xs uppercase tracking-[0.15em] text-[#514f49]">© 2026 Rafał Wielgus</p>
-        </footer>
+        <Footer heading="Porozmawiajmy." />
       </div>
     </main>
   );

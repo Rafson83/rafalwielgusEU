@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { ensurePostsTable } from '@/lib/posts';
-import { RowDataPacket } from 'mysql2';
+import { getPostBySlug } from '@/lib/posts';
 
 export async function GET(
   request: NextRequest,
@@ -9,14 +7,19 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    await ensurePostsTable();
-    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts WHERE slug = ? LIMIT 1', [slug]);
+    const { searchParams } = new URL(request.url);
+    const simulatedDateParam = searchParams.get('simulatedDate');
+    const referenceDate = simulatedDateParam
+      ? new Date(simulatedDateParam)
+      : new Date();
 
-    if (rows.length === 0) {
+    const post = await getPostBySlug(slug, { referenceDate });
+
+    if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0]);
+    return NextResponse.json(post);
   } catch (error) {
     console.error('Error fetching post by slug:', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });

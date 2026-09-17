@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { ensurePostsTable } from '@/lib/posts';
-import { RowDataPacket } from 'mysql2';
+import { ensurePostsTable, getPublishedPosts } from '@/lib/posts';
 
-// GET /api/posts - pobierz listę opublikowanych postów
-export async function GET() {
+// GET /api/posts - pobierz listę opublikowanych lub zaplanowanych postów
+export async function GET(request: Request) {
   try {
-    await ensurePostsTable();
+    const { searchParams } = new URL(request.url);
+    const includeScheduled =
+      searchParams.get('includeScheduled') === 'true' ||
+      searchParams.get('all') === 'true';
+    const simulatedDateParam = searchParams.get('simulatedDate');
+    const referenceDate = simulatedDateParam
+      ? new Date(simulatedDateParam)
+      : new Date();
 
-    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts WHERE published = 1 ORDER BY createdAt DESC');
-    return NextResponse.json(rows);
+    const posts = await getPublishedPosts({
+      includeScheduled,
+      referenceDate,
+    });
+    return NextResponse.json(posts);
   } catch (error) {
     console.error('Error fetching posts:', error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });

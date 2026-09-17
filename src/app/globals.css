@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf6f0; /* Kolor papieru */
-  --foreground: #1c1917; /* Głęboka czerń drukarska */
+  --background: #f4f0e9; /* Ciepły papier */
+  --foreground: #181817; /* Głęboka czerń */
+  --accent: #e85d3f;     /* Terakota */
 }
 
 @theme inline {

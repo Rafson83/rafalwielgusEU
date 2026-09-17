@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Inter } from 'next/font/google';
 import './globals.css';
+import CookieBanner from '@/components/CookieBanner';
 
 const playfair = Playfair_Display({
   variable: '--font-serif',
@@ -29,6 +30,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#faf6f0] text-[#1c1917]">
         {children}
+        <CookieBanner />
       </body>
     </html>
   );
