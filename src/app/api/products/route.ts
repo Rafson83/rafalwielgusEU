@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getEffectiveProducts, updateProductOverride } from '@/lib/products-server';
-import { ProductStatus } from '@/lib/products';
 
 // GET /api/products - pobierz listę produktów (w panelu admina z draftami, publicznie bez)
 export async function GET(request: Request) {
@@ -16,24 +15,48 @@ export async function GET(request: Request) {
   }
 }
 
-// PATCH /api/products - zmiana statusu produktu (np. publikacja szkicu do "W przygotowaniu")
+// PATCH /api/products - aktualizacja produktu (status, tytuł, opis, cena, itp.)
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { slug, status, statusLabel } = body;
+    const {
+      slug,
+      status,
+      statusLabel,
+      title,
+      headline,
+      tagline,
+      description,
+      price,
+      priceNote,
+      badge,
+      category,
+    } = body;
 
-    if (!slug || !status) {
-      return NextResponse.json({ error: 'Brak wymaganych pól: slug i status' }, { status: 400 });
+    if (!slug) {
+      return NextResponse.json({ error: 'Brak wymaganego pola: slug' }, { status: 400 });
     }
 
-    const updated = await updateProductOverride(slug, status as ProductStatus, statusLabel);
+    const updated = await updateProductOverride(slug, {
+      status,
+      statusLabel,
+      title,
+      headline,
+      tagline,
+      description,
+      price,
+      priceNote,
+      badge,
+      category,
+    });
+
     if (!updated) {
       return NextResponse.json({ error: 'Produkt nie został znaleziony' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, product: updated });
   } catch (error) {
-    console.error('Błąd aktualizacji statusu produktu:', error);
+    console.error('Błąd aktualizacji produktu:', error);
     return NextResponse.json({ error: 'Błąd zapisu' }, { status: 500 });
   }
 }

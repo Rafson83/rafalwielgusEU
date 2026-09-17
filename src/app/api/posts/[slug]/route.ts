@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getEffectivePostBySlug } from '@/lib/posts-server';
 import { getPostBySlug } from '@/lib/posts';
-import { getAllPostsForAdmin } from '@/lib/posts-server';
 
 export async function GET(
   request: NextRequest,
@@ -15,16 +15,14 @@ export async function GET(
       ? new Date(simulatedDateParam)
       : new Date();
 
-    if (isPreview) {
-      const allPosts = await getAllPostsForAdmin(referenceDate);
-      const adminPost = allPosts.find((p) => p.slug === slug);
-      if (adminPost) {
-        return NextResponse.json(adminPost);
-      }
+    // Pobranie z serwera z uwzględnieniem custom_posts i posts_override
+    const effectivePost = await getEffectivePostBySlug(slug, { referenceDate, isPreview });
+    if (effectivePost) {
+      return NextResponse.json(effectivePost);
     }
 
+    // Fallback do standardowej biblioteki posts
     const post = await getPostBySlug(slug, { referenceDate });
-
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }

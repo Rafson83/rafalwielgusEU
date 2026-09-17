@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import MarkdownView from '@/components/MarkdownView';
 
 export interface AdminPost {
   id: number;
@@ -53,10 +54,13 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [postStatusFilter, setPostStatusFilter] = useState<'all' | 'published' | 'scheduled' | 'draft'>('all');
 
-  // Formularze widoczność
-  const [showNewPostForm, setShowNewPostForm] = useState(false);
+  // =========================================================================
+  // STAN EDYTORA ARTYKUŁÓW (TWORZENIE & EDYCJA)
+  // =========================================================================
+  const [postEditorOpen, setPostEditorOpen] = useState(false);
+  const [isEditingExistingPost, setIsEditingExistingPost] = useState(false);
+  const [editingPostOriginalSlug, setEditingPostOriginalSlug] = useState('');
 
-  // Formularz nowego artykułu
   const [postTitle, setPostTitle] = useState('');
   const [postSlug, setPostSlug] = useState('');
   const [postCategory, setPostCategory] = useState('Psychologia');
@@ -67,6 +71,30 @@ export default function AdminDashboard() {
   const [postThumbnailUrl, setPostThumbnailUrl] = useState('');
   const [postFormStatus, setPostFormStatus] = useState<'draft' | 'scheduled' | 'published'>('draft');
   const [postScheduledDate, setPostScheduledDate] = useState('');
+
+  // Widok edytora: edytor / split / podgląd
+  const [editorViewMode, setEditorViewMode] = useState<'editor' | 'split' | 'preview'>('split');
+  const [showPromptsPanel, setShowPromptsPanel] = useState(true);
+  const [showSeoSettings, setShowSeoSettings] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // =========================================================================
+  // STAN EDYTORA PRODUKTU / PROJEKTU
+  // =========================================================================
+  const [productEditorOpen, setProductEditorOpen] = useState(false);
+  const [editingProductSlug, setEditingProductSlug] = useState('');
+  const [prodForm, setProdForm] = useState({
+    title: '',
+    headline: '',
+    tagline: '',
+    description: '',
+    price: '',
+    priceNote: '',
+    category: 'Kurs & Warsztat',
+    badge: '',
+    status: 'Szkic',
+  });
 
   // Modal szybkiego podglądu (in-panel preview)
   const [previewModal, setPreviewModal] = useState<{
@@ -103,60 +131,163 @@ export default function AdminDashboard() {
   };
 
   // Helper generowania sluga
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setPostTitle(val);
-    const generatedSlug = val
+  const generateSlugFromTitle = (titleText: string) => {
+    return titleText
       .toLowerCase()
       .trim()
+      .replace(/ą/g, 'a')
+      .replace(/ć/g, 'c')
+      .replace(/ę/g, 'e')
+      .replace(/ł/g, 'l')
+      .replace(/ń/g, 'n')
+      .replace(/ó/g, 'o')
+      .replace(/ś/g, 's')
+      .replace(/ź/g, 'z')
+      .replace(/ż/g, 'z')
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    setPostSlug(generatedSlug);
   };
 
-  // Dodawanie nowego artykułu
-  const handleCreatePost = async (e: React.FormEvent) => {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPostTitle(val);
+    if (!isEditingExistingPost) {
+      setPostSlug(generateSlugFromTitle(val));
+    }
+  };
+
+  // Otwieranie formularza NOWEGO artykułu
+  const handleOpenNewPostEditor = () => {
+    setIsEditingExistingPost(false);
+    setEditingPostOriginalSlug('');
+    setPostTitle('');
+    setPostSlug('');
+    setPostCategory('Psychologia');
+    setPostContent('');
+    setPostTags('');
+    setPostSeoTitle('');
+    setPostSeoDescription('');
+    setPostThumbnailUrl('');
+    setPostFormStatus('draft');
+    setPostScheduledDate('');
+    setShowSeoSettings(false);
+    setEditorViewMode('split');
+    setPostEditorOpen(true);
+  };
+
+  // Otwieranie EDYCJI ISTNIEJĄCEGO artykułu
+  const handleOpenEditPost = (post: AdminPost) => {
+    setIsEditingExistingPost(true);
+    setEditingPostOriginalSlug(post.slug);
+    setPostTitle(post.title);
+    setPostSlug(post.slug);
+    setPostCategory(post.category || 'Psychologia');
+    setPostContent(post.content || '');
+    setPostTags(post.tags || '');
+    setPostSeoTitle(post.seoTitle || '');
+    setPostSeoDescription(post.seoDescription || '');
+    setPostThumbnailUrl(post.thumbnailUrl || '');
+    setPostFormStatus(post.postStatus);
+
+    if (post.postStatus === 'scheduled' && post.createdAt) {
+      const d = new Date(post.createdAt);
+      const isoLocal = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+      setPostScheduledDate(isoLocal);
+    } else {
+      setPostScheduledDate('');
+    }
+
+    setShowSeoSettings(!!(post.seoTitle || post.seoDescription || post.tags));
+    setEditorViewMode('split');
+    setPostEditorOpen(true);
+  };
+
+  // Wstawianie znaczników Markdown do textarea
+  const insertMarkdown = (before: string, after = '', defaultText = '') => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setPostContent((prev) => prev + before + defaultText + after);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = postContent.substring(start, end) || defaultText;
+    const replacement = before + selected + after;
+
+    const newContent = postContent.substring(0, start) + replacement + postContent.substring(end);
+    setPostContent(newContent);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+    }, 40);
+  };
+
+  // Zapis posta (Nowy lub Edycja)
+  const handleSavePost = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: '', type: '' });
 
     try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: postTitle,
-          slug: postSlug,
-          content: postContent,
-          category: postCategory,
-          tags: postTags,
-          seoTitle: postSeoTitle,
-          seoDescription: postSeoDescription,
-          thumbnailUrl: postThumbnailUrl,
-          status: postFormStatus,
-          scheduledDate: postFormStatus === 'scheduled' ? postScheduledDate : undefined,
-        }),
-      });
+      if (isEditingExistingPost) {
+        // PUT /api/posts - pełna edycja
+        const res = await fetch('/api/posts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originalSlug: editingPostOriginalSlug,
+            slug: postSlug,
+            title: postTitle,
+            content: postContent,
+            category: postCategory,
+            tags: postTags,
+            seoTitle: postSeoTitle,
+            seoDescription: postSeoDescription,
+            thumbnailUrl: postThumbnailUrl,
+            status: postFormStatus,
+            scheduledDate: postFormStatus === 'scheduled' ? postScheduledDate : undefined,
+          }),
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Nie udało się dodać artykułu');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Nie udało się zaktualizować artykułu');
 
-      setMessage({ text: 'Artykuł został pomyślnie utworzony!', type: 'success' });
-      setPostTitle('');
-      setPostSlug('');
-      setPostContent('');
-      setPostTags('');
-      setPostSeoTitle('');
-      setPostSeoDescription('');
-      setPostThumbnailUrl('');
-      setPostFormStatus('draft');
-      setPostScheduledDate('');
-      setShowNewPostForm(false);
+        setMessage({ text: `Zapisano zmiany w artykule "${postTitle}"!`, type: 'success' });
+      } else {
+        // POST /api/posts - nowy artykuł
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: postTitle,
+            slug: postSlug,
+            content: postContent,
+            category: postCategory,
+            tags: postTags,
+            seoTitle: postSeoTitle,
+            seoDescription: postSeoDescription,
+            thumbnailUrl: postThumbnailUrl,
+            status: postFormStatus,
+            scheduledDate: postFormStatus === 'scheduled' ? postScheduledDate : undefined,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Nie udało się dodać artykułu');
+
+        setMessage({ text: `Artykuł "${postTitle}" został pomyślnie utworzony!`, type: 'success' });
+      }
+
+      setPostEditorOpen(false);
       await fetchData();
     } catch (err: unknown) {
       setMessage({
-        text: err instanceof Error ? err.message : 'Błąd dodawania artykułu',
+        text: err instanceof Error ? err.message : 'Błąd zapisu artykułu',
         type: 'error',
       });
     } finally {
@@ -164,7 +295,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Zmiana statusu artykułu (Szkic / Zapowiedź / Publikacja)
+  // Szybka zmiana statusu artykułu z listy
   const handlePostStatusChange = async (
     slug: string,
     newStatus: 'draft' | 'scheduled' | 'published',
@@ -201,7 +332,56 @@ export default function AdminDashboard() {
     }
   };
 
-  // Zmiana statusu produktu (przenoszenie między Projektami a Produktami)
+  // Otwarcie edytora produktu
+  const handleOpenEditProduct = (prod: AdminProduct) => {
+    setEditingProductSlug(prod.slug);
+    setProdForm({
+      title: prod.title || '',
+      headline: prod.headline || '',
+      tagline: prod.tagline || '',
+      description: prod.description || '',
+      price: prod.price || '',
+      priceNote: prod.priceNote || '',
+      category: prod.category || 'Kurs & Warsztat',
+      badge: prod.badge || '',
+      status: prod.status || 'Szkic',
+    });
+    setProductEditorOpen(true);
+  };
+
+  // Zapis edycji produktu
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage({ text: '', type: '' });
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: editingProductSlug,
+          ...prodForm,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Nie udało się zapisać zmian w produkcie');
+
+      setMessage({ text: `Pomyślnie zaktualizowano produkt "${prodForm.title}"!`, type: 'success' });
+      setProductEditorOpen(false);
+      await fetchData();
+    } catch (err: unknown) {
+      setMessage({
+        text: err instanceof Error ? err.message : 'Błąd zapisu produktu',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Zmiana statusu produktu z listy
   const handleProductStatusChange = async (slug: string, newStatus: string) => {
     setLoading(true);
     setMessage({ text: '', type: '' });
@@ -232,7 +412,18 @@ export default function AdminDashboard() {
     }
   };
 
-  // Podział produktów na Projekty (Szkice) oraz Produkty (Zapowiedzi & Aktywne)
+  // Statystyki tekstu w edytorze
+  const editorStats = useMemo(() => {
+    const trimmed = postContent.trim();
+    if (!trimmed) return { words: 0, chars: 0, readTimeMinutes: 1, paragraphs: 0 };
+    const words = trimmed.split(/\s+/).length;
+    const chars = trimmed.length;
+    const paragraphs = trimmed.split(/\n\s*\n/).filter(Boolean).length;
+    const readTimeMinutes = Math.max(1, Math.ceil(words / 200));
+    return { words, chars, readTimeMinutes, paragraphs };
+  }, [postContent]);
+
+  // Podział produktów
   const projectDrafts = useMemo(() => {
     return products.filter((p) => p.status === 'Szkic' || p.isDraft);
   }, [products]);
@@ -244,12 +435,10 @@ export default function AdminDashboard() {
   // Filtrowanie wpisów
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      // Filtr statusu
       if (postStatusFilter === 'published' && post.postStatus !== 'published') return false;
       if (postStatusFilter === 'scheduled' && post.postStatus !== 'scheduled') return false;
       if (postStatusFilter === 'draft' && post.postStatus !== 'draft') return false;
 
-      // Wyszukiwarka
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = post.title.toLowerCase().includes(q);
@@ -280,11 +469,11 @@ export default function AdminDashboard() {
                 Kokpit Twórcy & Administratora
               </h1>
               <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
-                RW. Workshop v2.0
+                RW. Workshop v2.5 — Markdown Studio
               </span>
             </div>
             <p className="text-sm text-gray-400 mt-1">
-              Zarządzanie esejami, harmonogramem publikacji, inkubatorem projektów i produktami cyfrowymi
+              Pełny edytor Markdown, harmonogram publikacji, inkubator projektów i katalog produktów cyfrowych
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -328,7 +517,6 @@ export default function AdminDashboard() {
         {/* Główne Zakładki (Tabs) */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4 mb-8">
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            {/* Tab 1: Wpisy */}
             <button
               onClick={() => {
                 setActiveTab('posts');
@@ -346,7 +534,6 @@ export default function AdminDashboard() {
               </span>
             </button>
 
-            {/* Tab 2: Projekty (Szkice Produktów) */}
             <button
               onClick={() => {
                 setActiveTab('projects');
@@ -364,7 +551,6 @@ export default function AdminDashboard() {
               </span>
             </button>
 
-            {/* Tab 3: Produkty (Aktywne na stronie) */}
             <button
               onClick={() => {
                 setActiveTab('products');
@@ -383,7 +569,6 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* Szybka wyszukiwarka */}
           <div className="relative w-full sm:w-64">
             <input
               type="text"
@@ -521,188 +706,14 @@ export default function AdminDashboard() {
               </div>
 
               <button
-                onClick={() => setShowNewPostForm(!showNewPostForm)}
+                onClick={handleOpenNewPostEditor}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all flex items-center gap-1.5"
               >
-                <span>{showNewPostForm ? '✕ Zamknij formularz' : '+ Dodaj nowy artykuł'}</span>
+                <span>+ Napisz nowy artykuł</span>
               </button>
             </div>
 
-            {/* Rozwijany Formularz Dodawania Nowego Artykułu */}
-            {showNewPostForm && (
-              <form onSubmit={handleCreatePost} className="bg-white/[0.03] border border-indigo-500/30 p-6 rounded-2xl space-y-6 animate-fadeIn">
-                <div className="flex justify-between items-center border-b border-white/[0.08] pb-3">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span>✍️ Nowy artykuł</span>
-                  </h3>
-                  <span className="text-xs text-gray-400">Wybierz kategorię publikacji poniżej</span>
-                </div>
-
-                {/* Wybór kategorii statusu */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <label
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      postFormStatus === 'draft'
-                        ? 'bg-amber-500/10 border-amber-500 text-white'
-                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="postStatus"
-                      value="draft"
-                      checked={postFormStatus === 'draft'}
-                      onChange={() => setPostFormStatus('draft')}
-                      className="mt-1"
-                    />
-                    <div>
-                      <strong className="block text-xs uppercase tracking-wider text-amber-400">🟡 Szkic</strong>
-                      <p className="text-[11px] text-gray-400 mt-1">Niewidoczny dla czytelników. Dostępny tylko w panelu.</p>
-                    </div>
-                  </label>
-
-                  <label
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      postFormStatus === 'scheduled'
-                        ? 'bg-purple-500/10 border-purple-500 text-white'
-                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="postStatus"
-                      value="scheduled"
-                      checked={postFormStatus === 'scheduled'}
-                      onChange={() => setPostFormStatus('scheduled')}
-                      className="mt-1"
-                    />
-                    <div>
-                      <strong className="block text-xs uppercase tracking-wider text-purple-400">🟣 Zapowiedź</strong>
-                      <p className="text-[11px] text-gray-400 mt-1">Widoczna karta z odliczaniem do daty w przyszłości.</p>
-                    </div>
-                  </label>
-
-                  <label
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      postFormStatus === 'published'
-                        ? 'bg-emerald-500/10 border-emerald-500 text-white'
-                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="postStatus"
-                      value="published"
-                      checked={postFormStatus === 'published'}
-                      onChange={() => setPostFormStatus('published')}
-                      className="mt-1"
-                    />
-                    <div>
-                      <strong className="block text-xs uppercase tracking-wider text-emerald-400">🟢 Opublikowany</strong>
-                      <p className="text-[11px] text-gray-400 mt-1">Natychmiast widoczny i w pełni czytelny na blogu.</p>
-                    </div>
-                  </label>
-                </div>
-
-                {postFormStatus === 'scheduled' && (
-                  <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30">
-                    <label className="text-xs uppercase tracking-wider font-semibold text-purple-300 block mb-2">
-                      Planowana data publikacji zapowiedzi:
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={postScheduledDate}
-                      onChange={(e) => setPostScheduledDate(e.target.value)}
-                      required={postFormStatus === 'scheduled'}
-                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-purple-500 outline-none"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Tytuł wpisu</label>
-                    <input
-                      type="text"
-                      value={postTitle}
-                      onChange={handleTitleChange}
-                      required
-                      placeholder="Wprowadź tytuł artykułu"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Slug (URL)</label>
-                    <input
-                      type="text"
-                      value={postSlug}
-                      onChange={(e) => setPostSlug(e.target.value)}
-                      required
-                      placeholder="np. moj-nowy-artykul"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Kategoria</label>
-                    <select
-                      value={postCategory}
-                      onChange={(e) => setPostCategory(e.target.value)}
-                      className="w-full bg-[#111827] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
-                    >
-                      <option value="Psychologia">Psychologia</option>
-                      <option value="Technologia">Technologia</option>
-                      <option value="Biznes">Biznes</option>
-                      <option value="Automatyka & AI">Automatyka & AI</option>
-                      <option value="Rozwój">Rozwój (Long-Life Learning)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Tagi (po przecinku)</label>
-                    <input
-                      type="text"
-                      value={postTags}
-                      onChange={(e) => setPostTags(e.target.value)}
-                      placeholder="plc, automatyka, kariera"
-                      className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs uppercase text-gray-400 font-semibold block mb-2">Treść artykułu (Markdown)</label>
-                  <textarea
-                    rows={8}
-                    value={postContent}
-                    onChange={(e) => setPostContent(e.target.value)}
-                    required
-                    placeholder="Wpisz treść artykułu w formacie Markdown..."
-                    className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl p-4 text-sm focus:border-indigo-500 outline-none text-white transition-all font-mono"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.08]">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPostForm(false)}
-                    className="px-5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white"
-                  >
-                    Anuluj
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Zapisywanie...' : 'Zapisz artykuł'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Lista Wpisów */}
+            {/* Lista Wpisów z przyciskiem EDYTUJ */}
             <div className="space-y-4">
               {filteredPosts.length === 0 ? (
                 <div className="bg-white/[0.02] border border-white/[0.08] p-12 text-center rounded-2xl">
@@ -737,7 +748,7 @@ export default function AdminDashboard() {
                                 : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                             }`}
                           >
-                            {isDraft ? '🟡 Szkic (niewidoczny)' : isSched ? '🟣 Zapowiedź (data w przyszłości)' : '🟢 Opublikowany'}
+                            {isDraft ? '🟡 Szkic (niewidoczny)' : isSched ? '🟣 Zapowiedź' : '🟢 Opublikowany'}
                           </span>
 
                           <span className="text-[10px] font-semibold text-gray-400 bg-white/5 px-2 py-0.5 rounded">
@@ -762,8 +773,18 @@ export default function AdminDashboard() {
                         </p>
                       </div>
 
-                      {/* Pasek akcji i szybkiej zmiany statusu */}
+                      {/* Pasek akcji i przycisk EDYTUJ */}
                       <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-white/5">
+                        {/* Główny przycisk EDYCJI TREŚCI */}
+                        <button
+                          onClick={() => handleOpenEditPost(post)}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 transition-all flex items-center gap-1.5 shadow-sm"
+                          title="Edytuj treść, tytuł, status i formatowanie artykułu"
+                        >
+                          <span>✏️</span>
+                          <span>Edytuj treść</span>
+                        </button>
+
                         {/* Przycisk podglądu treści w oknie */}
                         <button
                           onClick={() => setPreviewModal({ type: 'post', data: post })}
@@ -771,7 +792,7 @@ export default function AdminDashboard() {
                           title="Szybki podgląd treści bez opuszczania panelu"
                         >
                           <span>📄</span>
-                          <span>Treść</span>
+                          <span>Podgląd</span>
                         </button>
 
                         {/* Bezpośredni link podglądu */}
@@ -794,7 +815,7 @@ export default function AdminDashboard() {
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 transition-all"
                               title="Włącz zapowiedź na stronie z przyszłą datą"
                             >
-                              🟣 Włącz Zapowiedź
+                              🟣 Zapowiedź
                             </button>
                             <button
                               onClick={() => handlePostStatusChange(post.slug, 'published')}
@@ -802,7 +823,7 @@ export default function AdminDashboard() {
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition-all"
                               title="Opublikuj natychmiast dla czytelników"
                             >
-                              🟢 Publikuj teraz
+                              🟢 Publikuj
                             </button>
                           </>
                         )}
@@ -814,7 +835,7 @@ export default function AdminDashboard() {
                               disabled={loading}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition-all"
                             >
-                              🟢 Publikuj teraz
+                              🟢 Publikuj
                             </button>
                             <button
                               onClick={() => handlePostStatusChange(post.slug, 'draft')}
@@ -822,7 +843,7 @@ export default function AdminDashboard() {
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 transition-all"
                               title="Ukryj całkowicie przed czytelnikami"
                             >
-                              🟡 Cofnij do Szkicu
+                              🟡 Szkic
                             </button>
                           </>
                         )}
@@ -858,7 +879,7 @@ export default function AdminDashboard() {
                     <span>💡 Projekty Warsztatowe (Inkubator Szkiców Produktów)</span>
                   </h2>
                   <p className="text-xs text-gray-400 mt-1 max-w-2xl leading-relaxed">
-                    To Twój warsztat roboczy. Poniższe kursy i narzędzia mają status <span className="text-amber-400 font-semibold">Szkic</span> i są <strong className="text-white">niewidoczne dla czytelników na blogu</strong>. Gdy uznasz, że pomysł jest gotowy do wystartowania z kampanią — kliknij przycisk <span className="text-purple-400 font-semibold">„Uruchom Zapowiedź”</span>. Wtedy produkt automatycznie przeniesie się do zakładki <strong className="text-emerald-300">Produkty</strong> i pojawi się na blogu ze zbieraniem zapisów na listę startową!
+                    To Twój warsztat roboczy. Poniższe kursy i narzędzia mają status <span className="text-amber-400 font-semibold">Szkic</span> i są <strong className="text-white">niewidoczne dla czytelników na blogu</strong>. Możesz w każdej chwili edytować ich opisy, hasła i ceny. Gdy uznasz, że pomysł jest gotowy — kliknij <span className="text-purple-400 font-semibold">„Uruchom Zapowiedź”</span>, a produkt automatycznie przeniesie się do zakładki <strong className="text-emerald-300">Produkty</strong>.
                   </p>
                 </div>
                 <span className="text-xs px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold">
@@ -925,21 +946,20 @@ export default function AdminDashboard() {
                       <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => handleOpenEditProduct(prod)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 transition-all flex items-center gap-1"
+                            title="Edytuj treść, hasło i cenę projektu"
+                          >
+                            <span>✏️</span>
+                            <span>Edytuj</span>
+                          </button>
+                          <button
                             onClick={() => setPreviewModal({ type: 'product', data: prod })}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 transition-all flex items-center gap-1"
                           >
                             <span>🔍</span>
                             <span>Podgląd</span>
                           </button>
-                          <a
-                            href={`/produkty/${prod.slug}?preview=admin`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 transition-all flex items-center gap-1"
-                          >
-                            <span>👁</span>
-                            <span>Otwórz</span>
-                          </a>
                         </div>
 
                         {/* Przeniesienie do Produktów jako Zapowiedź */}
@@ -972,7 +992,7 @@ export default function AdminDashboard() {
                     <span>📦 Aktywny Katalog Produktów & Zapowiedzi</span>
                   </h2>
                   <p className="text-xs text-gray-400 mt-1 max-w-2xl leading-relaxed">
-                    Produkty w tej zakładce są <strong className="text-emerald-300">widoczne dla czytelników na stronie /produkty</strong>. Jeśli chcesz wycofać produkt z widoku publicznego, kliknij przycisk <span className="text-amber-400 font-semibold">„Cofnij do Projektów”</span> — produkt natychmiast wróci jako szkic do zakładki Projekty.
+                    Produkty w tej zakładce są <strong className="text-emerald-300">widoczne dla czytelników na stronie /produkty</strong>. Możesz edytować ich opisy, hasła, statusy i ceny bezpośrednio stąd.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1064,7 +1084,6 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
-                          {/* Zmiana etapu w ramach produktów */}
                           <div className="flex items-center gap-2">
                             <label className="text-[11px] text-gray-400 font-semibold">Status:</label>
                             <select
@@ -1081,6 +1100,15 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleOpenEditProduct(prod)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 transition-all flex items-center gap-1"
+                              title="Edytuj treść, hasło i cenę produktu"
+                            >
+                              <span>✏️</span>
+                              <span>Edytuj</span>
+                            </button>
+
                             <a
                               href={`/produkty/${prod.slug}`}
                               target="_blank"
@@ -1091,7 +1119,6 @@ export default function AdminDashboard() {
                               <span>Zobacz</span>
                             </a>
 
-                            {/* Przycisk wycofania do Projektów */}
                             <button
                               onClick={() => handleProductStatusChange(prod.slug, 'Szkic')}
                               disabled={loading}
@@ -1107,6 +1134,724 @@ export default function AdminDashboard() {
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* MODAL PEŁNEGO EDYTORA ARTYKUŁU (MARKDOWN STUDIO + PODPOWIEDZI)           */}
+        {/* ========================================================================= */}
+        {postEditorOpen && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+            <div className="bg-[#0f172a] border border-white/15 rounded-2xl w-full max-w-6xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden animate-scaleIn">
+              {/* Header Edytora */}
+              <div className="flex flex-wrap items-center justify-between p-4 sm:p-5 border-b border-white/10 bg-[#1e293b]/70 gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">✍️</span>
+                  <div>
+                    <h3 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+                      <span>{isEditingExistingPost ? 'Edycja artykułu' : 'Nowy artykuł'}</span>
+                      {isEditingExistingPost && (
+                        <span className="text-xs font-mono font-normal px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          {editingPostOriginalSlug}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs text-gray-400">
+                      Formatuj tekst za pomocą paska narzędzi lub pisz w czystym Markdown z podpowiedziami
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPostEditorOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-all"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={handleSavePost}
+                    disabled={loading || !postTitle.trim() || !postContent.trim()}
+                    className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <span>{loading ? 'Zapisywanie...' : '💾 Zapisz artykuł'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Treść Edytora - Przewijana */}
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
+                {/* 1. Status Publikacji (Szkic / Zapowiedź / Publikacja) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                      postFormStatus === 'draft'
+                        ? 'bg-amber-500/15 border-amber-500/70 text-white'
+                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="postEditorStatus"
+                      value="draft"
+                      checked={postFormStatus === 'draft'}
+                      onChange={() => setPostFormStatus('draft')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <strong className="block text-xs uppercase tracking-wider text-amber-400">🟡 Szkic roboczy</strong>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Ukryty przed czytelnikami. Edytuj bez pośpiechu.</p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                      postFormStatus === 'scheduled'
+                        ? 'bg-purple-500/15 border-purple-500/70 text-white'
+                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="postEditorStatus"
+                      value="scheduled"
+                      checked={postFormStatus === 'scheduled'}
+                      onChange={() => setPostFormStatus('scheduled')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <strong className="block text-xs uppercase tracking-wider text-purple-400">🟣 Zapowiedź</strong>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Karta widoczna na blogu z przyszłą datą premiery.</p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                      postFormStatus === 'published'
+                        ? 'bg-emerald-500/15 border-emerald-500/70 text-white'
+                        : 'bg-white/[0.02] border-white/10 text-gray-400 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="postEditorStatus"
+                      value="published"
+                      checked={postFormStatus === 'published'}
+                      onChange={() => setPostFormStatus('published')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <strong className="block text-xs uppercase tracking-wider text-emerald-400">🟢 Opublikowany</strong>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Widoczny i w pełni czytelny dla wszystkich.</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Pole daty zapowiedzi */}
+                {postFormStatus === 'scheduled' && (
+                  <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-500/40 flex flex-wrap items-center gap-4">
+                    <label className="text-xs uppercase tracking-wider font-semibold text-purple-300">
+                      Planowana data i godzina publikacji:
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={postScheduledDate}
+                      onChange={(e) => setPostScheduledDate(e.target.value)}
+                      required={postFormStatus === 'scheduled'}
+                      className="bg-black/40 border border-purple-500/50 rounded-xl px-4 py-2 text-sm text-white focus:border-purple-400 outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* 2. Główne dane: Tytuł, Slug, Kategoria */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="md:col-span-6">
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1.5">Tytuł artykułu</label>
+                    <input
+                      type="text"
+                      value={postTitle}
+                      onChange={handleTitleChange}
+                      required
+                      placeholder="Wprowadź tytuł wpisu..."
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white font-medium"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs uppercase text-gray-400 font-semibold">Slug (URL)</label>
+                      <button
+                        type="button"
+                        onClick={() => setPostSlug(generateSlugFromTitle(postTitle))}
+                        className="text-[10px] text-indigo-400 hover:text-indigo-300 underline"
+                      >
+                        Generuj z tytułu
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={postSlug}
+                      onChange={(e) => setPostSlug(e.target.value)}
+                      required
+                      placeholder="np. moj-nowy-wpis"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1.5">Kategoria</label>
+                    <select
+                      value={postCategory}
+                      onChange={(e) => setPostCategory(e.target.value)}
+                      className="w-full bg-[#1e293b] border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none text-white"
+                    >
+                      <option value="Psychologia">Psychologia</option>
+                      <option value="Technologia">Technologia</option>
+                      <option value="Biznes">Biznes</option>
+                      <option value="Automatyka & AI">Automatyka & AI</option>
+                      <option value="Rozwój">Rozwój (Long-Life Learning)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Rozwijana sekcja SEO / Tagi */}
+                <div className="border border-white/10 rounded-xl bg-white/[0.01] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowSeoSettings(!showSeoSettings)}
+                    className="w-full px-4 py-2.5 text-xs text-gray-400 hover:text-white flex items-center justify-between font-semibold"
+                  >
+                    <span>⚙️ Opcje zaawansowane: Tagi, Miniaturka i SEO ({showSeoSettings ? 'Zwiń' : 'Rozwiń'})</span>
+                    <span>{showSeoSettings ? '▲' : '▼'}</span>
+                  </button>
+
+                  {showSeoSettings && (
+                    <div className="p-4 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 gap-4 bg-black/20">
+                      <div>
+                        <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Tagi (oddzielone przecinkami)</label>
+                        <input
+                          type="text"
+                          value={postTags}
+                          onChange={(e) => setPostTags(e.target.value)}
+                          placeholder="plc, automatyka, diagnostyka, python"
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">URL Miniaturki (okładka)</label>
+                        <input
+                          type="text"
+                          value={postThumbnailUrl}
+                          onChange={(e) => setPostThumbnailUrl(e.target.value)}
+                          placeholder="/images/posts/artykul-1.jpg"
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Tytuł SEO</label>
+                        <input
+                          type="text"
+                          value={postSeoTitle}
+                          onChange={(e) => setPostSeoTitle(e.target.value)}
+                          placeholder="Tytuł pod Google / social media"
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Opis SEO (Meta Description)</label>
+                        <input
+                          type="text"
+                          value={postSeoDescription}
+                          onChange={(e) => setPostSeoDescription(e.target.value)}
+                          placeholder="Krótki opis 150-160 znaków wyświetlany w wyszukiwarce"
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ========================================================================= */}
+                {/* 3. PASEK NARZĘDZI FORMATOWANIA MARKDOWN + PODPOWIEDZI                      */}
+                {/* ========================================================================= */}
+                <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0d1424]">
+                  {/* Główny Toolbar */}
+                  <div className="p-3 border-b border-white/10 bg-[#162032] flex flex-wrap items-center justify-between gap-2">
+                    {/* Przyciski formatowania */}
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('## ', '', 'Nagłówek sekcji')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Nagłówek sekcji H2"
+                      >
+                        H2
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('### ', '', 'Podtytuł')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Podtytuł H3"
+                      >
+                        H3
+                      </button>
+                      <span className="h-4 w-px bg-white/10 mx-1"></span>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('**', '**', 'pogrubiony tekst')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Pogrubienie"
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('*', '*', 'kursywa')}
+                        className="px-2.5 py-1 rounded-lg text-xs italic font-bold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Kursywa"
+                      >
+                        I
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('`', '`', 'kod')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-white/15 text-indigo-300 border border-white/10"
+                        title="Kod liniowy"
+                      >
+                        `kod`
+                      </button>
+                      <span className="h-4 w-px bg-white/10 mx-1"></span>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('- ', '', 'Punkt listy')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Lista punktowana"
+                      >
+                        • Lista
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('1. ', '', 'Krok pierwszy')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Lista numerowana"
+                      >
+                        1. Numer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('> ', '', 'Ważny cytat lub myśl przewodnia')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Cytat"
+                      >
+                        „” Cytat
+                      </button>
+                      <span className="h-4 w-px bg-white/10 mx-1"></span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          insertMarkdown(
+                            '\n> 💡 **Lekcja z warsztatu:** ',
+                            '\n\n',
+                            'Kiedy układ odmawia posłuszeństwa, zacznij od diagnostyki zasilania i masy, a nie od przepisywania programu.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                        title="Wstaw wyróżnioną ramkę z lekcją z warsztatu"
+                      >
+                        💡 Lekcja
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          insertMarkdown(
+                            '\n> ⚠️ **Uwaga techniczna:** ',
+                            '\n\n',
+                            'Przed przystąpieniem do jakichkolwiek prac upewnij się, że napięcie zostało odłączone i zablokowane (LOTO).'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40"
+                        title="Wstaw ostrzeżenie / ramkę uwagi"
+                      >
+                        ⚠️ Uwaga
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          insertMarkdown(
+                            '\n```plc\n',
+                            '\n```\n',
+                            '// Przykładowa sekwencja logiki drabinkowej\nIF StartBtn AND NOT SafetyStop THEN\n    MotorRun := TRUE;\nEND_IF;'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40"
+                        title="Blok kodu"
+                      >
+                        &lt;/&gt; Kod
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('[', '](https://...)', 'tekst odnośnika')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Link"
+                      >
+                        🔗 Link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('\n---\n\n')}
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Pozioma linia podziału"
+                      >
+                        --- Linia
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          insertMarkdown(
+                            '\n| Zagadnienie | Teoria | Praktyka warsztatowa |\n|---|---|---|\n| Diagnostyka | Schemat ideowy | Pomiary pod obciążeniem |\n| Programowanie | Czysta logika | Odporność na błędy operatora |\n\n'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10"
+                        title="Tabela Markdown"
+                      >
+                        📊 Tabela
+                      </button>
+                    </div>
+
+                    {/* Przełącznik trybu widoku + Asystent podpowiedzi */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPromptsPanel(!showPromptsPanel)}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1.5 ${
+                          showPromptsPanel
+                            ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50'
+                            : 'bg-white/5 text-gray-400 hover:text-white border-white/10'
+                        }`}
+                        title="Włącz/wyłącz boczny panel podpowiedzi i gotowych szablonów"
+                      >
+                        <span>💡</span>
+                        <span>Podpowiedzi</span>
+                      </button>
+
+                      <div className="flex rounded-lg bg-black/40 p-0.5 border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setEditorViewMode('editor')}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                            editorViewMode === 'editor' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Edytor
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditorViewMode('split')}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                            editorViewMode === 'split' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Podział (Split)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditorViewMode('preview')}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                            editorViewMode === 'preview' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Podgląd
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Panel Podpowiedzi i Szablonów Twórcy (Rozwijany) */}
+                  {showPromptsPanel && (
+                    <div className="p-3.5 bg-[#131b2e] border-b border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-amber-400 font-bold flex items-center gap-1">
+                          <span>⚡</span>
+                          <span>Gotowe klocki Rafała (kliknij, by wstawić):</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            insertMarkdown(
+                              'Przez całe dekady słyszeliśmy, że wąska specjalizacja to jedyna droga. Jednak gdy sam stanąłem przed problemem w warsztacie, rzeczywistość brutalnie zweryfikowała tę teorię...\n\n'
+                            )
+                          }
+                          className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10"
+                        >
+                          + Wstęp z haczykiem
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            insertMarkdown(
+                              '\n> 🔧 **Lekcja z warsztatu:** Teoria z podręczników mówi jedno, ale gdy maszyna zatrzymuje się na linii o 2:00 w nocy, liczy się tylko zimna krew i systematyczna eliminacja punktów awarii.\n\n'
+                            )
+                          }
+                          className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        >
+                          + Lekcja z awarii
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            insertMarkdown(
+                              '\n| Etap | Błąd początkującego | Podejście praktyka |\n|---|---|---|\n| 1. Analiza | Wymiana elementów na ślepo | Pomiar sygnałów oscyloskopem |\n| 2. Wdrożenie | Brak dokumentacji zmian | Czytelny schemat i wersjonowanie |\n\n'
+                            )
+                          }
+                          className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10"
+                        >
+                          + Tabela: Błąd vs Praktyk
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            insertMarkdown(
+                              '\nNie musisz wiedzieć wszystkiego od razu. Wystarczy, że nie boisz się pytać i każdego dnia budujesz choć jeden namacalny artefakt. A jak to wygląda w Twoim warsztacie?\n\n'
+                            )
+                          }
+                          className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        >
+                          + Podsumowanie i konkluzja
+                        </button>
+                      </div>
+
+                      <div className="text-[11px] text-gray-400 font-mono">
+                        Podpowiedź: Używaj `## ` dla rozdziałów i `&gt; ` dla złotych myśli.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Przestrzeń Edytora & Podglądu */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 min-h-[460px]">
+                    {/* Kolumna 1: Kod Markdown */}
+                    {(editorViewMode === 'editor' || editorViewMode === 'split') && (
+                      <div className={`p-4 flex flex-col ${editorViewMode === 'editor' ? 'col-span-2' : ''}`}>
+                        <div className="flex justify-between items-center text-[11px] text-gray-400 uppercase tracking-wider mb-2 font-mono">
+                          <span>Treść (Markdown)</span>
+                          <span>Wiersze i formatowanie</span>
+                        </div>
+                        <textarea
+                          ref={textareaRef}
+                          id="post-content-editor"
+                          value={postContent}
+                          onChange={(e) => setPostContent(e.target.value)}
+                          required
+                          placeholder="Zacznij pisać esej w formacie Markdown... Możesz używać nagłówków ##, list -, bloków kodu ``` oraz ramek > 💡"
+                          className="w-full flex-1 min-h-[380px] bg-transparent text-gray-200 font-mono text-sm leading-relaxed p-2 outline-none resize-y placeholder-gray-600 focus:ring-0"
+                        />
+                      </div>
+                    )}
+
+                    {/* Kolumna 2: Podgląd na żywo */}
+                    {(editorViewMode === 'preview' || editorViewMode === 'split') && (
+                      <div className={`p-4 sm:p-6 overflow-y-auto max-h-[550px] bg-[#070b14] ${editorViewMode === 'preview' ? 'col-span-2' : ''}`}>
+                        <div className="flex justify-between items-center text-[11px] text-indigo-400 uppercase tracking-wider mb-4 pb-2 border-b border-white/10 font-mono">
+                          <span>Podgląd na żywo</span>
+                          <span className="text-gray-500">Wygląd na blogu</span>
+                        </div>
+
+                        {postTitle && (
+                          <h1 className="text-2xl font-extrabold text-white mb-4 pb-2 border-b border-white/10">
+                            {postTitle}
+                          </h1>
+                        )}
+
+                        {postContent.trim() ? (
+                          <MarkdownView content={postContent} theme="dark" enableDropCap={false} />
+                        ) : (
+                          <p className="text-xs text-gray-600 italic py-8 text-center">
+                            Podgląd sformatowanego tekstu pojawi się tutaj po wpisaniu treści w edytorze.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pasek statystyk na dole edytora */}
+                  <div className="p-3 bg-[#111928] border-t border-white/10 flex flex-wrap items-center justify-between text-xs text-gray-400 font-mono">
+                    <div className="flex items-center gap-4">
+                      <span>Słowa: <strong className="text-white">{editorStats.words}</strong></span>
+                      <span>Znaki: <strong className="text-white">{editorStats.chars}</strong></span>
+                      <span>Akapity: <strong className="text-white">{editorStats.paragraphs}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span>⏱ Szacowany czas czytania: <strong className="text-indigo-400">~{editorStats.readTimeMinutes} min</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dolny pasek zapisu */}
+              <div className="p-4 border-t border-white/10 bg-[#1e293b]/70 flex justify-between items-center">
+                <span className="text-xs text-gray-400">
+                  {isEditingExistingPost
+                    ? `Edytujesz wpis: "${editingPostOriginalSlug}"`
+                    : 'Tworzysz nowy artykuł'}
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPostEditorOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white transition-all"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={handleSavePost}
+                    disabled={loading || !postTitle.trim() || !postContent.trim()}
+                    className="px-6 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <span>{loading ? 'Zapisywanie...' : '💾 Zapisz artykuł'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* MODAL EDYCJI PRODUKTU / PROJEKTU                                         */}
+        {/* ========================================================================= */}
+        {productEditorOpen && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-[#111827] border border-white/15 rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl overflow-hidden animate-scaleIn">
+              <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📦</span>
+                  <div>
+                    <h3 className="font-bold text-base text-white">
+                      Edycja Produktu / Projektu
+                    </h3>
+                    <span className="text-xs text-gray-400 font-mono">
+                      /produkty/{editingProductSlug}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProductEditorOpen(false)}
+                  className="text-gray-400 hover:text-white text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProduct} className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Nazwa produktu</label>
+                    <input
+                      type="text"
+                      value={prodForm.title}
+                      onChange={(e) => setProdForm({ ...prodForm, title: e.target.value })}
+                      required
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Status</label>
+                    <select
+                      value={prodForm.status}
+                      onChange={(e) => setProdForm({ ...prodForm, status: e.target.value })}
+                      className="w-full bg-[#1f2937] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                    >
+                      <option value="Szkic">🔒 Szkic (tylko w Projektach)</option>
+                      <option value="Zapowiedź">🟣 Zapowiedź (w Katalogu, zbieranie zapisów)</option>
+                      <option value="W przygotowaniu">🚀 W przygotowaniu</option>
+                      <option value="W realizacji">⏳ W realizacji</option>
+                      <option value="Dostępny">✅ Dostępny</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Nagłówek (Headline)</label>
+                  <input
+                    type="text"
+                    value={prodForm.headline}
+                    onChange={(e) => setProdForm({ ...prodForm, headline: e.target.value })}
+                    required
+                    placeholder="np. Odkryj swój potencjał. Zakoduj swoją przewagę."
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Krótkie hasło (Tagline)</label>
+                  <input
+                    type="text"
+                    value={prodForm.tagline}
+                    onChange={(e) => setProdForm({ ...prodForm, tagline: e.target.value })}
+                    placeholder="Krótki opis z korzyścią na liście produktów"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Cena (etykieta)</label>
+                    <input
+                      type="text"
+                      value={prodForm.price}
+                      onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
+                      required
+                      placeholder="np. 297 zł lub Przedsprzedaż wkrótce"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Odznaka / Badge</label>
+                    <input
+                      type="text"
+                      value={prodForm.badge}
+                      onChange={(e) => setProdForm({ ...prodForm, badge: e.target.value })}
+                      placeholder="np. Flagowy program, Nowość, Rekomendowany"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase text-gray-400 font-semibold block mb-1">Pełny opis produktu</label>
+                  <textarea
+                    rows={5}
+                    value={prodForm.description}
+                    onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })}
+                    required
+                    placeholder="Opis programu, celów i problemu, który rozwiązuje ten produkt..."
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl p-3.5 text-sm text-white focus:border-indigo-500 outline-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setProductEditorOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Zapisywanie...' : 'Zapisz produkt'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -1148,8 +1893,12 @@ export default function AdminDashboard() {
                       <span>Kategoria: <strong className="text-white">{(previewModal.data as AdminPost).category}</strong></span>
                       <span>Status: <strong className="text-emerald-400">{(previewModal.data as AdminPost).statusLabel}</strong></span>
                     </div>
-                    <div className="font-mono text-xs whitespace-pre-wrap leading-relaxed bg-black/30 p-4 rounded-xl border border-white/5 max-h-[50vh] overflow-y-auto">
-                      {(previewModal.data as AdminPost).content}
+                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 max-h-[50vh] overflow-y-auto">
+                      <MarkdownView
+                        content={(previewModal.data as AdminPost).content}
+                        theme="dark"
+                        enableDropCap={false}
+                      />
                     </div>
                   </div>
                 ) : (

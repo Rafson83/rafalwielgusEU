@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import NewsletterBox from '@/components/NewsletterBox';
 import Footer from '@/components/Footer';
+import MarkdownView from '@/components/MarkdownView';
 
 interface Post {
   id: number;
@@ -302,23 +303,7 @@ export default function BlogPost() {
 
           {/* Article Content Body */}
           <div className="mx-auto mt-12 max-w-3xl font-serif text-lg leading-[1.85] text-[#181817] sm:text-xl sm:leading-[1.9]">
-            {post.content.split('\n\n').map((paragraph, index) => {
-              if (index === 0) {
-                return (
-                  <p
-                    key={index}
-                    className="mb-8 first-letter:float-left first-letter:mr-4 first-letter:font-serif first-letter:text-6xl first-letter:font-black first-letter:leading-[0.8] first-letter:text-[#181817]"
-                  >
-                    {paragraph}
-                  </p>
-                );
-              }
-              return (
-                <p key={index} className="mb-8">
-                  {paragraph}
-                </p>
-              );
-            })}
+            <MarkdownView content={post.content} theme="light" enableDropCap={true} />
           </div>
 
           {/* Author Box */}

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getAllPostsForAdmin, createNewPost, updatePostStatus } from '@/lib/posts-server';
-import { getPublishedPosts } from '@/lib/posts';
+import {
+  getAllPostsForAdmin,
+  getEffectivePublicPosts,
+  createNewPost,
+  updatePostStatus,
+  updatePost,
+} from '@/lib/posts-server';
 
 // GET /api/posts - pobierz listę artykułów
 export async function GET(request: Request) {
@@ -16,7 +21,7 @@ export async function GET(request: Request) {
     }
 
     const includeScheduled = searchParams.get('includeScheduled') === 'true';
-    const posts = await getPublishedPosts({
+    const posts = await getEffectivePublicPosts({
       includeScheduled,
       referenceDate,
     });
@@ -57,7 +62,58 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH /api/posts - zmiana statusu lub daty artykułu (Szkic / Zapowiedź / Publikacja)
+// PUT /api/posts - pełna edycja artykułu (tytuł, treść, kategoria, tagi, slug, seo, status)
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      originalSlug,
+      slug,
+      title,
+      content,
+      category,
+      tags,
+      seoTitle,
+      seoDescription,
+      thumbnailUrl,
+      status,
+      scheduledDate,
+    } = body;
+
+    const postSlug = originalSlug || slug;
+    if (!postSlug) {
+      return NextResponse.json({ error: 'Brak identyfikatora posta (slug)' }, { status: 400 });
+    }
+
+    if (!title || !content || !category) {
+      return NextResponse.json({ error: 'Wypełnij wymagane pola (tytuł, kategoria, treść)' }, { status: 400 });
+    }
+
+    const updated = await updatePost(postSlug, {
+      title,
+      newSlug: slug,
+      content,
+      category,
+      tags,
+      seoTitle,
+      seoDescription,
+      thumbnailUrl,
+      status: status || 'draft',
+      scheduledDate,
+    });
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Artykuł nie został odnaleziony' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, post: updated });
+  } catch (error) {
+    console.error('Błąd aktualizacji posta:', error);
+    return NextResponse.json({ error: 'Nie udało się zaktualizować artykułu' }, { status: 500 });
+  }
+}
+
+// PATCH /api/posts - szybka zmiana statusu lub daty artykułu (Szkic / Zapowiedź / Publikacja)
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();

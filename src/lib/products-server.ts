@@ -8,9 +8,16 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 const OVERRIDE_FILE = path.join(DATA_DIR, 'products_override.json');
 
 export interface ProductOverride {
-  status: ProductStatus;
+  status?: ProductStatus;
   statusLabel?: string;
   price?: string;
+  priceNote?: string;
+  title?: string;
+  headline?: string;
+  tagline?: string;
+  description?: string;
+  badge?: string;
+  category?: 'Kurs & Warsztat' | 'Szablon & Narzędzie' | 'E-book & Przewodnik';
 }
 
 // Odczyt nadpisań z pliku JSON
@@ -75,9 +82,16 @@ export async function getEffectiveProducts(includeDrafts = false): Promise<Produ
 
     return {
       ...prod,
+      title: override.title || prod.title,
+      headline: override.headline || prod.headline,
+      tagline: override.tagline || prod.tagline,
+      description: override.description || prod.description,
       status: newStatus,
       statusLabel: override.statusLabel || prod.statusLabel,
       price: override.price || prod.price,
+      priceNote: override.priceNote !== undefined ? override.priceNote : prod.priceNote,
+      badge: override.badge || prod.badge,
+      category: override.category || prod.category,
       isDraft: isNowDraft,
     };
   });
@@ -91,38 +105,51 @@ export async function getEffectiveProducts(includeDrafts = false): Promise<Produ
 
 export async function updateProductOverride(
   slug: string,
-  newStatus: ProductStatus,
-  statusLabel?: string
+  updatesOrStatus: Partial<ProductOverride> | ProductStatus,
+  maybeStatusLabel?: string
 ): Promise<Product | null> {
   const fileOverrides = await readOverridesFromFile();
   const currentOverride = fileOverrides[slug] || {};
 
+  let updates: Partial<ProductOverride> = {};
+  if (typeof updatesOrStatus === 'string') {
+    updates = {
+      status: updatesOrStatus as ProductStatus,
+      statusLabel: maybeStatusLabel,
+    };
+  } else {
+    updates = updatesOrStatus;
+  }
+
+  const newStatus = updates.status || currentOverride.status;
+  let statusLabel = updates.statusLabel || currentOverride.statusLabel;
+  if (newStatus && !statusLabel) {
+    if (newStatus === 'Zapowiedź') statusLabel = 'Zapowiedź — Zapisy na listę startową';
+    else if (newStatus === 'W przygotowaniu') statusLabel = 'W przygotowaniu — Zapisy na listę startową';
+    else if (newStatus === 'Szkic') statusLabel = 'Szkic roboczy — Wewnętrzny szkic projektowy';
+  }
+
   fileOverrides[slug] = {
     ...currentOverride,
-    status: newStatus,
-    statusLabel:
-      statusLabel ||
-      (newStatus === 'Zapowiedź'
-        ? 'Zapowiedź — Zapisy na listę startową'
-        : newStatus === 'W przygotowaniu'
-        ? 'W przygotowaniu — Zapisy na listę startową'
-        : newStatus === 'Szkic'
-        ? 'Szkic roboczy — Wewnętrzny szkic projektowy'
-        : undefined),
+    ...updates,
+    ...(newStatus ? { status: newStatus } : {}),
+    ...(statusLabel ? { statusLabel } : {}),
   };
 
   await writeOverridesToFile(fileOverrides);
 
   // Zapis do MySQL jeśli baza jest aktywna
-  try {
-    await db.query(
-      `INSERT INTO product_overrides (slug, status, statusLabel)
-       VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE status = VALUES(status), statusLabel = VALUES(statusLabel)`,
-      [slug, newStatus, statusLabel || null]
-    );
-  } catch {
-    // Ignorujemy brak bazy w środowisku lokalnym/statycznym
+  if (newStatus) {
+    try {
+      await db.query(
+        `INSERT INTO product_overrides (slug, status, statusLabel, price)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE status = VALUES(status), statusLabel = VALUES(statusLabel), price = VALUES(price)`,
+        [slug, newStatus, statusLabel || null, updates.price || currentOverride.price || null]
+      );
+    } catch {
+      // Ignorujemy brak bazy w środowisku lokalnym/statycznym
+    }
   }
 
   const all = await getEffectiveProducts(true);

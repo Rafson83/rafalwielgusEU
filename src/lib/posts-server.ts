@@ -13,6 +13,11 @@ export interface PostOverride {
   createdAt?: string;
   category?: string;
   title?: string;
+  content?: string;
+  tags?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  thumbnailUrl?: string;
 }
 
 export interface AdminPost extends Post {
@@ -109,6 +114,11 @@ export async function getAllPostsForAdmin(refDate: Date = new Date()): Promise<A
       createdAt: override?.createdAt || post.createdAt,
       category: override?.category || post.category,
       title: override?.title || post.title,
+      content: override?.content !== undefined ? override.content : post.content,
+      tags: override?.tags !== undefined ? override.tags : post.tags,
+      seoTitle: override?.seoTitle !== undefined ? override.seoTitle : post.seoTitle,
+      seoDescription: override?.seoDescription !== undefined ? override.seoDescription : post.seoDescription,
+      thumbnailUrl: override?.thumbnailUrl !== undefined ? override.thumbnailUrl : post.thumbnailUrl,
     };
 
     const { postStatus, statusLabel } = computePostStatus(effectivePost, refDate);
@@ -124,6 +134,39 @@ export async function getAllPostsForAdmin(refDate: Date = new Date()): Promise<A
   return result.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+}
+
+export async function getEffectivePublicPosts(options?: {
+  includeScheduled?: boolean;
+  referenceDate?: Date;
+}): Promise<AdminPost[]> {
+  const all = await getAllPostsForAdmin(options?.referenceDate);
+
+  if (options?.includeScheduled) {
+    return all.filter((p) => p.postStatus === 'published' || p.postStatus === 'scheduled');
+  }
+
+  return all.filter((p) => p.postStatus === 'published');
+}
+
+export async function getEffectivePostBySlug(
+  slug: string,
+  options?: { referenceDate?: Date; isPreview?: boolean }
+): Promise<AdminPost | null> {
+  const all = await getAllPostsForAdmin(options?.referenceDate);
+  const post = all.find((p) => p.slug === slug);
+  if (!post) return null;
+
+  if (options?.isPreview) {
+    return post;
+  }
+
+  // Dla czytelników ukrywamy szkice
+  if (post.postStatus === 'draft') {
+    return null;
+  }
+
+  return post;
 }
 
 export async function updatePostStatus(
@@ -174,6 +217,103 @@ export async function updatePostStatus(
 
   const all = await getAllPostsForAdmin();
   return all.find((p) => p.slug === slug) || null;
+}
+
+export async function updatePost(
+  originalSlug: string,
+  updatedData: {
+    title: string;
+    newSlug?: string;
+    content: string;
+    category: string;
+    tags?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    thumbnailUrl?: string;
+    status: 'draft' | 'scheduled' | 'published';
+    scheduledDate?: string;
+  }
+): Promise<AdminPost | null> {
+  const targetSlug = (updatedData.newSlug && updatedData.newSlug.trim()) || originalSlug;
+  const published = updatedData.status === 'draft' ? 0 : 1;
+
+  let createdAt = updatedData.scheduledDate;
+  if (updatedData.status === 'scheduled' && !createdAt) {
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 7);
+    nextDate.setHours(9, 0, 0, 0);
+    createdAt = nextDate.toISOString();
+  } else if (updatedData.status === 'published' && !createdAt) {
+    createdAt = new Date().toISOString();
+  }
+
+  // 1. Aktualizacja w pliku custom_posts.json (jeśli tam istnieje)
+  const customPosts = await readJsonFile<Post[]>(CUSTOM_POSTS_FILE, []);
+  const customIndex = customPosts.findIndex((p) => p.slug === originalSlug);
+  if (customIndex !== -1) {
+    customPosts[customIndex] = {
+      ...customPosts[customIndex],
+      title: updatedData.title,
+      slug: targetSlug,
+      content: updatedData.content,
+      category: updatedData.category,
+      tags: updatedData.tags,
+      seoTitle: updatedData.seoTitle,
+      seoDescription: updatedData.seoDescription,
+      thumbnailUrl: updatedData.thumbnailUrl,
+      published,
+      ...(createdAt ? { createdAt } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    await writeJsonFile(CUSTOM_POSTS_FILE, customPosts);
+  }
+
+  // 2. Zapis nadpisań w posts_override.json
+  const overrides = await readJsonFile<Record<string, PostOverride>>(POSTS_OVERRIDE_FILE, {});
+  if (targetSlug !== originalSlug) {
+    delete overrides[originalSlug];
+  }
+
+  overrides[targetSlug] = {
+    ...overrides[targetSlug],
+    title: updatedData.title,
+    content: updatedData.content,
+    category: updatedData.category,
+    tags: updatedData.tags,
+    seoTitle: updatedData.seoTitle,
+    seoDescription: updatedData.seoDescription,
+    thumbnailUrl: updatedData.thumbnailUrl,
+    published,
+    ...(createdAt ? { createdAt } : {}),
+  };
+
+  await writeJsonFile(POSTS_OVERRIDE_FILE, overrides);
+
+  // 3. Aktualizacja w bazie MySQL (jeśli aktywna)
+  try {
+    await ensurePostsTable();
+    await db.query(
+      'UPDATE posts SET title = ?, slug = ?, content = ?, category = ?, tags = ?, seoTitle = ?, seoDescription = ?, thumbnailUrl = ?, published = ?, createdAt = COALESCE(?, createdAt) WHERE slug = ?',
+      [
+        updatedData.title,
+        targetSlug,
+        updatedData.content,
+        updatedData.category,
+        updatedData.tags || null,
+        updatedData.seoTitle || null,
+        updatedData.seoDescription || null,
+        updatedData.thumbnailUrl || null,
+        published,
+        createdAt || null,
+        originalSlug,
+      ]
+    );
+  } catch {
+    // fallback
+  }
+
+  const all = await getAllPostsForAdmin();
+  return all.find((p) => p.slug === targetSlug) || null;
 }
 
 export async function createNewPost(postData: {
