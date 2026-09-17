@@ -11,17 +11,17 @@ export default function Home() {
         <section className="grid min-h-[calc(100vh-81px)] items-center gap-12 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
           <div>
             <p className="mb-7 font-sans text-xs font-bold uppercase tracking-[0.25em] text-[#e85d3f]">Rafał Wielgus / 2026</p>
-            <h1 className="max-w-5xl font-serif text-[clamp(3.5rem,9vw,8.5rem)] font-black leading-[0.84] tracking-[-0.055em]">
+            <h1 className="max-w-5xl font-serif text-[clamp(2.75rem,8vw,8.5rem)] font-black leading-[0.88] tracking-[-0.05em]">
               Myślę.<br />
               <span className="text-[#e85d3f]">Buduję.</span><br />
               Piszę.
             </h1>
-            <p className="mt-10 max-w-lg font-sans text-base leading-7 text-[#514f49] sm:text-lg">
+            <p className="mt-8 max-w-lg font-sans text-base leading-7 text-[#514f49] sm:text-lg">
               O ludziach, technologii i decyzjach, które robią różnicę. Bez pozy eksperta. Z ciekawością i konkretem.
             </p>
-            <div className="mt-10 flex flex-wrap items-center gap-6 font-sans text-sm font-bold">
-              <Link href="/blog" className="bg-[#181817] px-6 py-4 text-white transition-transform hover:-translate-y-1">
-                Czytaj blog <span className="ml-5 text-[#e85d3f]">→</span>
+            <div className="mt-8 flex flex-wrap items-center gap-5 font-sans text-sm font-bold">
+              <Link href="/blog" className="bg-[#181817] px-6 py-3.5 text-white transition-transform hover:-translate-y-1">
+                Czytaj blog <span className="ml-4 text-[#e85d3f]">→</span>
               </Link>
               <Link href="/o-mnie" className="border-b border-[#181817] pb-1 transition-colors hover:border-[#e85d3f] hover:text-[#e85d3f]">
                 Poznaj moją historię
@@ -29,14 +29,14 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-md lg:justify-self-end">
-            <div className="aspect-[4/5] rotate-2 bg-[#e85d3f] p-5 shadow-[14px_14px_0_#181817] sm:p-7">
+          <div className="relative mx-auto w-full max-w-sm sm:max-w-md lg:justify-self-end overflow-hidden sm:overflow-visible py-4">
+            <div className="aspect-[4/5] sm:rotate-2 bg-[#e85d3f] p-5 shadow-[8px_8px_0_#181817] sm:shadow-[14px_14px_0_#181817] sm:p-7">
               <div className="flex h-full flex-col justify-between border border-white/60 p-5 text-white sm:p-7">
                 <div className="flex items-start justify-between font-sans text-[10px] font-bold uppercase tracking-[0.2em]">
                   <span>Notatnik<br />osobisty</span>
                   <span>01 / 01</span>
                 </div>
-                <p className="font-serif text-4xl font-bold leading-[0.92] tracking-[-0.04em] sm:text-5xl">
+                <p className="font-serif text-3xl font-bold leading-[0.95] tracking-[-0.04em] sm:text-5xl sm:leading-[0.92]">
                   Dobre pytania są warte więcej niż szybkie odpowiedzi.
                 </p>
                 <div className="flex items-end justify-between font-sans text-xs font-bold uppercase tracking-[0.15em]">
@@ -45,7 +45,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <span className="absolute -bottom-10 -left-5 font-serif text-7xl text-[#181817]/10 sm:-left-12">01</span>
+            <span className="absolute -bottom-6 left-2 font-serif text-7xl text-[#181817]/10 pointer-events-none select-none sm:-bottom-10 sm:-left-12">01</span>
           </div>
         </section>
 

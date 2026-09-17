@@ -15,7 +15,7 @@ function ConfirmationContent() {
   const isMissing = status === 'missing_token' || status === 'invalid';
 
   return (
-    <div className="mx-auto my-16 max-w-3xl border border-[#181817] bg-[#ede7dc]/60 p-8 sm:p-14 shadow-[10px_10px_0_#181817]">
+    <div className="mx-auto my-10 max-w-3xl border border-[#181817] bg-[#ede7dc]/60 p-5 sm:p-14 shadow-[5px_5px_0_#181817] sm:shadow-[10px_10px_0_#181817]">
       {isSuccess && (
         <>
           <div className="flex flex-wrap items-center gap-3">

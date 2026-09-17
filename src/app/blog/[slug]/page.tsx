@@ -151,27 +151,27 @@ export default function BlogPost() {
             </Link>
           </div>
 
-          <div className="mx-auto my-12 max-w-4xl border border-[#181817] bg-[#ede7dc]/60 p-8 sm:p-14 shadow-[10px_10px_0_#181817]">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="bg-[#181817] px-3 py-1 font-sans text-xs font-bold uppercase tracking-wider text-white">
+          <div className="mx-auto my-10 max-w-4xl border border-[#181817] bg-[#ede7dc]/60 p-5 sm:p-14 shadow-[5px_5px_0_#181817] sm:shadow-[10px_10px_0_#181817]">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="bg-[#181817] px-2.5 py-1 font-sans text-xs font-bold uppercase tracking-wider text-white">
                 Zaplanowana premiera
               </span>
-              <span className="bg-[#e85d3f] px-3 py-1 font-sans text-xs font-bold uppercase tracking-wider text-white">
+              <span className="bg-[#e85d3f] px-2.5 py-1 font-sans text-xs font-bold uppercase tracking-wider text-white">
                 {post.category}
               </span>
               <span className="font-sans text-xs font-bold uppercase tracking-wider text-[#514f49]">
-                Rytm wydawniczy: Wtorki & Czwartki
+                Wtorki & Czwartki &bull; 09:00
               </span>
             </div>
 
-            <h1 className="mt-6 font-serif text-[clamp(2.2rem,5vw,3.75rem)] font-black leading-[0.98] tracking-[-0.04em]">
+            <h1 className="mt-5 font-serif text-[clamp(1.85rem,5vw,3.75rem)] font-black leading-[1.05] tracking-[-0.04em] break-words">
               {post.title}
             </h1>
 
-            <div className="mt-6 inline-flex flex-wrap items-center gap-3 border border-[#181817] bg-white px-4 py-3 shadow-[4px_4px_0_#181817]">
+            <div className="mt-5 inline-flex flex-wrap items-center gap-2.5 border border-[#181817] bg-white px-3.5 py-2.5 shadow-[3px_3px_0_#181817]">
               <span className="h-2.5 w-2.5 rounded-full bg-[#e85d3f] animate-pulse"></span>
               <span className="font-sans text-xs font-bold uppercase tracking-wider text-[#181817]">
-                Premiera: <strong>{formatPolishDateWithWeekday(post.createdAt)}</strong> o godz. <strong>09:00</strong>
+                Premiera: <strong>{formatPolishDateWithWeekday(post.createdAt)}</strong> o <strong>09:00</strong>
               </span>
             </div>
 
@@ -265,7 +265,7 @@ export default function BlogPost() {
               </span>
             </div>
 
-            <h1 className="mt-6 font-serif text-[clamp(2.5rem,6vw,4.5rem)] font-black leading-[0.95] tracking-[-0.04em] text-balance">
+            <h1 className="mt-6 font-serif text-[clamp(2.1rem,6vw,4.5rem)] font-black leading-[1.02] tracking-[-0.04em] text-balance break-words">
               {post.title}
             </h1>
 
@@ -291,7 +291,7 @@ export default function BlogPost() {
 
           {/* Featured Image */}
           {post.thumbnailUrl && (
-            <div className="mx-auto my-12 max-w-4xl overflow-hidden border border-[#181817] shadow-[10px_10px_0_#181817]">
+            <div className="mx-auto my-8 sm:my-12 max-w-4xl overflow-hidden border border-[#181817] shadow-[5px_5px_0_#181817] sm:shadow-[10px_10px_0_#181817]">
               <img
                 src={post.thumbnailUrl}
                 alt={post.title}
@@ -322,7 +322,7 @@ export default function BlogPost() {
           </div>
 
           {/* Author Box */}
-          <div className="mx-auto mt-16 max-w-3xl border border-[#181817] bg-[#ede7dc]/50 p-8 sm:p-10 shadow-[6px_6px_0_#181817]">
+          <div className="mx-auto mt-14 max-w-3xl border border-[#181817] bg-[#ede7dc]/50 p-5 sm:p-10 shadow-[4px_4px_0_#181817] sm:shadow-[6px_6px_0_#181817]">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-[#181817] bg-[#181817] font-serif text-2xl font-bold text-[#f4f0e9]">
                 RW<span className="text-[#e85d3f]">.</span>

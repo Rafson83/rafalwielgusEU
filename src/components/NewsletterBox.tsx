@@ -52,7 +52,7 @@ export default function NewsletterBox({ className = '', source = 'blog' }: Newsl
 
   return (
     <section
-      className={`border border-[#181817] bg-[#ede7dc]/60 p-8 sm:p-12 shadow-[8px_8px_0_#181817] ${className}`}
+      className={`border border-[#181817] bg-[#ede7dc]/60 p-5 sm:p-12 shadow-[4px_4px_0_#181817] sm:shadow-[8px_8px_0_#181817] ${className}`}
     >
       <div className="max-w-2xl">
         <div className="flex flex-wrap items-center gap-3">
