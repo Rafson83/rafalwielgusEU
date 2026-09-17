@@ -3,12 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 export default function CookieBanner() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     // Sprawdzamy czy użytkownik dokonał już wyboru
     const consent = localStorage.getItem('rw_cookie_consent');
+    if (consent === 'all' && typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        analytics_storage: 'granted',
+      });
+    }
+
     if (!consent) {
       // Drobne opóźnienie, aby baner pojawił się płynnie po załadowaniu
       const timer = setTimeout(() => setIsOpen(true), 600);

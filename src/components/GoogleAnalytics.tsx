@@ -1,29 +1,7 @@
-'use client';
-
 import Script from 'next/script';
-import { useEffect } from 'react';
-
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-  }
-}
 
 export default function GoogleAnalytics() {
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-  useEffect(() => {
-    if (!gaId || typeof window === 'undefined') return;
-
-    // Sprawdzamy zapisany wcześniej wybór użytkownika
-    const consent = localStorage.getItem('rw_cookie_consent');
-    if (consent === 'all' && typeof window.gtag === 'function') {
-      window.gtag('consent', 'update', {
-        analytics_storage: 'granted',
-      });
-    }
-  }, [gaId]);
 
   if (!gaId) return null;
 
@@ -32,7 +10,7 @@ export default function GoogleAnalytics() {
       {/* 1. Google Consent Mode v2 - domyślna odmowa do czasu akceptacji cookies */}
       <Script
         id="google-consent-default"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];

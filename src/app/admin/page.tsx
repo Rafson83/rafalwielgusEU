@@ -44,6 +44,7 @@ export interface AdminProduct {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'projects' | 'products'>('posts');
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -121,6 +122,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
   }, []);
 
@@ -458,8 +460,19 @@ export default function AdminDashboard() {
     return { total: posts.length, published, scheduled, drafts };
   }, [posts]);
 
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-[#0b0f19] text-white p-4 sm:p-8 font-sans flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
+          <span className="text-xs font-mono text-gray-400">Ładowanie kokpitu administratora...</span>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-[#0b0f19] text-white p-4 sm:p-8 font-sans">
+    <main suppressHydrationWarning className="min-h-screen bg-[#0b0f19] text-white p-4 sm:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="flex flex-wrap justify-between items-center pb-6 border-b border-white/[0.08] mb-8 gap-4">
