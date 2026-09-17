@@ -100,7 +100,15 @@ export async function updateProductOverride(
   fileOverrides[slug] = {
     ...currentOverride,
     status: newStatus,
-    statusLabel: statusLabel || (newStatus === 'W przygotowaniu' ? 'W przygotowaniu — Zapisy na listę startową' : undefined),
+    statusLabel:
+      statusLabel ||
+      (newStatus === 'Zapowiedź'
+        ? 'Zapowiedź — Zapisy na listę startową'
+        : newStatus === 'W przygotowaniu'
+        ? 'W przygotowaniu — Zapisy na listę startową'
+        : newStatus === 'Szkic'
+        ? 'Szkic roboczy — Wewnętrzny szkic projektowy'
+        : undefined),
   };
 
   await writeOverridesToFile(fileOverrides);

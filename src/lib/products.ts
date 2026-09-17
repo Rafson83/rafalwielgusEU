@@ -15,6 +15,7 @@ export type ProductStatus =
   | 'Dostępny'
   | 'Przedsprzedaż'
   | 'W przygotowaniu'
+  | 'Zapowiedź'
   | 'Szkic';
 
 export interface Product {

@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { ensurePostsTable, getPublishedPosts } from '@/lib/posts';
+import { getAllPostsForAdmin, createNewPost, updatePostStatus } from '@/lib/posts-server';
+import { getPublishedPosts } from '@/lib/posts';
 
-// GET /api/posts - pobierz listę opublikowanych lub zaplanowanych postów
+// GET /api/posts - pobierz listę artykułów
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const includeScheduled =
-      searchParams.get('includeScheduled') === 'true' ||
-      searchParams.get('all') === 'true';
+    const isAdmin = searchParams.get('admin') === 'true' || searchParams.get('all') === 'true';
     const simulatedDateParam = searchParams.get('simulatedDate');
-    const referenceDate = simulatedDateParam
-      ? new Date(simulatedDateParam)
-      : new Date();
+    const referenceDate = simulatedDateParam ? new Date(simulatedDateParam) : new Date();
 
+    if (isAdmin) {
+      const allPosts = await getAllPostsForAdmin(referenceDate);
+      return NextResponse.json(allPosts);
+    }
+
+    const includeScheduled = searchParams.get('includeScheduled') === 'true';
     const posts = await getPublishedPosts({
       includeScheduled,
       referenceDate,
     });
     return NextResponse.json(posts);
   } catch (error) {
-    console.error('Error fetching posts:', error);
-    return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
+    console.error('Błąd pobierania postów:', error);
+    return NextResponse.json({ error: 'Nie udało się pobrać artykułów' }, { status: 500 });
   }
 }
 
@@ -29,32 +31,50 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, slug, content, category, tags, seoTitle, seoDescription, thumbnailUrl, published } = body;
+    const { title, slug, content, category, tags, seoTitle, seoDescription, thumbnailUrl, status, scheduledDate } = body;
 
     if (!title || !slug || !content || !category) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Wypełnij wymagane pola (tytuł, slug, kategoria, treść)' }, { status: 400 });
     }
 
-    const isPublished = published ? 1 : 0;
-    const publishedAt = published ? new Date() : null;
+    const created = await createNewPost({
+      title,
+      slug,
+      content,
+      category,
+      tags,
+      seoTitle,
+      seoDescription,
+      thumbnailUrl,
+      status: status || 'draft',
+      scheduledDate,
+    });
 
-    await ensurePostsTable();
+    return NextResponse.json(created, { status: 201 });
+  } catch (error) {
+    console.error('Błąd tworzenia posta:', error);
+    return NextResponse.json({ error: 'Błąd podczas tworzenia artykułu' }, { status: 500 });
+  }
+}
 
-    // Bezpieczne wstawienie rekordu
-    await db.query(
-      'INSERT INTO posts (title, slug, content, category, tags, seoTitle, seoDescription, thumbnailUrl, published, publishedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, slug, content, category, tags || null, seoTitle || null, seoDescription || null, thumbnailUrl || null, isPublished, publishedAt]
-    );
+// PATCH /api/posts - zmiana statusu lub daty artykułu (Szkic / Zapowiedź / Publikacja)
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { slug, status, scheduledDate } = body;
 
-    return NextResponse.json({ success: true }, { status: 201 });
-  } catch (error: unknown) {
-    console.error('Error creating post:', error);
-    const errorCode = typeof error === 'object' && error !== null && 'code' in error
-      ? error.code
-      : undefined;
-    if (errorCode === 'ER_DUP_ENTRY') {
-      return NextResponse.json({ error: 'A post with this slug already exists' }, { status: 400 });
+    if (!slug || !status) {
+      return NextResponse.json({ error: 'Brak pól slug i status' }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
+
+    const updated = await updatePostStatus(slug, status, scheduledDate);
+    if (!updated) {
+      return NextResponse.json({ error: 'Artykuł nie został odnaleziony' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, post: updated });
+  } catch (error) {
+    console.error('Błąd aktualizacji posta:', error);
+    return NextResponse.json({ error: 'Nie udało się zaktualizować artykułu' }, { status: 500 });
   }
 }
