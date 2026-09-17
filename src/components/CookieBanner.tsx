@@ -26,6 +26,14 @@ export default function CookieBanner() {
   const handleConsent = (level: 'all' | 'necessary') => {
     localStorage.setItem('rw_cookie_consent', level);
     localStorage.setItem('rw_cookie_consent_date', new Date().toISOString());
+
+    // Aktualizacja stanu Google Consent Mode v2
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        analytics_storage: level === 'all' ? 'granted' : 'denied',
+      });
+    }
+
     setIsOpen(false);
   };
 

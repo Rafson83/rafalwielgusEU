@@ -182,16 +182,23 @@ export default function PrivacyPolicyPage() {
                       <td className="border border-[#181817] p-3 text-xs">Cookie sesyjne (HttpOnly)</td>
                       <td className="border border-[#181817] p-3 text-xs text-[#514f49]">Wyłącznie dla autoryzacji panelu administratora serwisu.</td>
                     </tr>
+                    <tr>
+                      <td className="border border-[#181817] p-3 font-mono text-xs">_ga, _ga_*</td>
+                      <td className="border border-[#181817] p-3 text-xs">Ciasteczka analityczne (Google)</td>
+                      <td className="border border-[#181817] p-3 text-xs text-[#514f49]">
+                        Statystyki odwiedzin (Google Analytics 4). <strong>Uruchamiane wyłącznie po kliknięciu „Akceptuję”</strong> w banerze cookies (Google Consent Mode v2) z pełną anonimizacją IP.
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
 
               <div className="mt-6 border border-[#181817] bg-[#ede7dc]/40 p-6">
                 <h4 className="font-serif text-lg font-bold text-[#181817]">
-                  Brak ciasteczek śledzących i komercyjnego profilowania
+                  Brak inwazyjnego śledzenia reklamowego
                 </h4>
                 <p className="mt-2 text-sm text-[#514f49]">
-                  Ten blog <strong>nie instaluje</strong> żadnych inwazyjnych pikseli śledzących korporacji reklamowych (np. Meta Pixel, TikTok, reklamowe skrypty Google Ads). Twoje wizyty na tej stronie nie są wykorzystywane do budowania Twojego profilu konsumenckiego w sieci.
+                  Ten blog <strong>nie instaluje</strong> pikseli remarketingowych korporacji reklamowych (np. Meta Pixel, TikTok, reklamowe sieci śledzące). Dane z Google Analytics służą wyłącznie do zrozumienia, które eseje cieszą się największym zainteresowaniem czytelników i nie są łączone z profilami reklamowymi.
                 </p>
               </div>
             </section>
@@ -205,9 +212,12 @@ export default function PrivacyPolicyPage() {
                 Kto pomaga mi w obsłudze serwisu (Procesorzy)?
               </h2>
               <p className="mt-4">
-                Aby zapewnić niezawodność, bezpieczeństwo i doręczalność wiadomości, korzystam z wyspecjalizowanych dostawców infrastruktury IT:
+                Aby zapewnić niezawodność, bezpieczeństwo, doręczalność wiadomości oraz anonimowe statystyki, korzystam z wyspecjalizowanych dostawców infrastruktury IT:
               </p>
               <ul className="mt-4 list-disc space-y-3 pl-6 text-sm text-[#514f49]">
+                <li>
+                  <strong>Google Ireland Limited</strong> (Gordon House, Barrow Street, Dublin 4, Irlandia) — dostawca narzędzia analitycznego Google Analytics 4. Dane przetwarzane są z włączoną anonimizacją adresów IP oraz standardem Google Consent Mode v2 (aktywny wyłącznie za Twoją zgodą).
+                </li>
                 <li>
                   <strong>Resend Inc.</strong> (USA) — infrastruktura techniczna do wysyłki e-maili transakcyjnych i newslettera. Przetwarzanie odbywa się w oparciu o Standardowe Klauzule Umowne (Standard Contractual Clauses – SCC) zatwierdzone przez Komisję Europejską.
                 </li>
