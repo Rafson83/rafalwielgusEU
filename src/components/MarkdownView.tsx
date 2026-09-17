@@ -8,15 +8,17 @@ interface MarkdownViewProps {
   enableDropCap?: boolean;
 }
 
-// Pomocnik do formatowania tekstu wewnątrz linii (bold, italic, inline code, linki)
+// Bezpieczny renderer markdown inline (bold, italic, inline code, linki) bez ryzyka zawieszenia
 function renderInlineMarkdown(text: string, theme: 'light' | 'dark'): React.ReactNode[] {
-  // Rozbicie po regexie na tokeny: linki [text](url), bold **text**, italic *text*, inline code `code`
-  const regex = /(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+  if (!text) return [];
+
+  // Wyrażenie regularne zabezpieczone przed backtrackingiem
+  const regex = /(\[[^\]]*\]\([^)]*\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
   const parts = text.split(regex);
 
   return parts.map((part, i) => {
     // Link: [tytuł](url)
-    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    const linkMatch = part.match(/^\[([^\]]*)\]\(([^)]*)\)$/);
     if (linkMatch) {
       const [, linkText, url] = linkMatch;
       return (
@@ -37,7 +39,7 @@ function renderInlineMarkdown(text: string, theme: 'light' | 'dark'): React.Reac
     }
 
     // Bold: **tekst**
-    const boldMatch = part.match(/^\*\*(.*?)\*\*$/);
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/);
     if (boldMatch) {
       return (
         <strong
@@ -50,7 +52,7 @@ function renderInlineMarkdown(text: string, theme: 'light' | 'dark'): React.Reac
     }
 
     // Italic: *tekst*
-    const italicMatch = part.match(/^\*(.*?)\*$/);
+    const italicMatch = part.match(/^\*([^*]+)\*$/);
     if (italicMatch) {
       return (
         <em key={i} className="italic">
@@ -60,7 +62,7 @@ function renderInlineMarkdown(text: string, theme: 'light' | 'dark'): React.Reac
     }
 
     // Inline code: `kod`
-    const codeMatch = part.match(/^`(.*?)`$/);
+    const codeMatch = part.match(/^`([^`]+)`$/);
     if (codeMatch) {
       return (
         <code
@@ -87,7 +89,6 @@ export default function MarkdownView({
 }: MarkdownViewProps) {
   if (!content) return null;
 
-  // Podział treści na bloki (akapity, nagłówki, bloki kodu, listy, cytaty)
   const lines = content.replace(/\r\n/g, '\n').split('\n');
   const blocks: React.ReactNode[] = [];
 
@@ -95,6 +96,7 @@ export default function MarkdownView({
   let paragraphIndex = 0;
 
   while (i < lines.length) {
+    const prevI = i;
     const line = lines[i];
 
     // 1. Pusta linia
@@ -128,7 +130,9 @@ export default function MarkdownView({
         codeLines.push(lines[i]);
         i++;
       }
-      i++; // pomiń zamykający ```
+      if (i < lines.length && lines[i].trim().startsWith('```')) {
+        i++; // pomiń zamykający ```
+      }
 
       blocks.push(
         <div
@@ -149,57 +153,66 @@ export default function MarkdownView({
       continue;
     }
 
-    // 4. Nagłówki: # , ## , ###
-    const h1Match = line.match(/^#\s+(.*)$/);
-    if (h1Match) {
-      blocks.push(
-        <h1
-          key={`h1-${i}`}
-          className={
-            theme === 'dark'
-              ? 'text-2xl sm:text-3xl font-extrabold text-white mt-8 mb-4'
-              : 'text-2xl sm:text-4xl font-serif font-black text-[#181817] mt-10 mb-4'
-          }
-        >
-          {renderInlineMarkdown(h1Match[1], theme)}
-        </h1>
-      );
-      i++;
-      continue;
-    }
+    // 4. Nagłówki: #, ##, ###, ####, #####, ######
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const headingText = headingMatch[2];
 
-    const h2Match = line.match(/^##\s+(.*)$/);
-    if (h2Match) {
-      blocks.push(
-        <h2
-          key={`h2-${i}`}
-          className={
-            theme === 'dark'
-              ? 'text-xl sm:text-2xl font-bold text-indigo-300 mt-8 mb-3'
-              : 'text-xl sm:text-2xl font-serif font-bold text-[#181817] mt-8 mb-3 border-b border-[#181817]/10 pb-2'
-          }
-        >
-          {renderInlineMarkdown(h2Match[1], theme)}
-        </h2>
-      );
-      i++;
-      continue;
-    }
+      if (level === 1) {
+        blocks.push(
+          <h1
+            key={`h1-${i}`}
+            className={
+              theme === 'dark'
+                ? 'text-2xl sm:text-3xl font-extrabold text-white mt-8 mb-4'
+                : 'text-2xl sm:text-4xl font-serif font-black text-[#181817] mt-10 mb-4'
+            }
+          >
+            {renderInlineMarkdown(headingText, theme)}
+          </h1>
+        );
+      } else if (level === 2) {
+        blocks.push(
+          <h2
+            key={`h2-${i}`}
+            className={
+              theme === 'dark'
+                ? 'text-xl sm:text-2xl font-bold text-indigo-300 mt-8 mb-3'
+                : 'text-xl sm:text-2xl font-serif font-bold text-[#181817] mt-8 mb-3 border-b border-[#181817]/10 pb-2'
+            }
+          >
+            {renderInlineMarkdown(headingText, theme)}
+          </h2>
+        );
+      } else if (level === 3) {
+        blocks.push(
+          <h3
+            key={`h3-${i}`}
+            className={
+              theme === 'dark'
+                ? 'text-lg sm:text-xl font-bold text-gray-200 mt-6 mb-2'
+                : 'text-lg sm:text-xl font-serif font-bold text-[#3d3b37] mt-6 mb-2'
+            }
+          >
+            {renderInlineMarkdown(headingText, theme)}
+          </h3>
+        );
+      } else {
+        blocks.push(
+          <h4
+            key={`h4-${i}`}
+            className={
+              theme === 'dark'
+                ? 'text-base sm:text-lg font-bold text-gray-300 mt-5 mb-2'
+                : 'text-base sm:text-lg font-serif font-bold text-[#3d3b37] mt-5 mb-2'
+            }
+          >
+            {renderInlineMarkdown(headingText, theme)}
+          </h4>
+        );
+      }
 
-    const h3Match = line.match(/^###\s+(.*)$/);
-    if (h3Match) {
-      blocks.push(
-        <h3
-          key={`h3-${i}`}
-          className={
-            theme === 'dark'
-              ? 'text-lg sm:text-xl font-bold text-gray-200 mt-6 mb-2'
-              : 'text-lg sm:text-xl font-serif font-bold text-[#3d3b37] mt-6 mb-2'
-          }
-        >
-          {renderInlineMarkdown(h3Match[1], theme)}
-        </h3>
-      );
       i++;
       continue;
     }
@@ -349,6 +362,13 @@ export default function MarkdownView({
           </div>
         );
         continue;
+      } else {
+        blocks.push(
+          <p key={`table-fallback-${i}`} className={`mb-6 leading-[1.85] ${theme === 'dark' ? 'text-gray-300' : 'text-[#181817]'}`}>
+            {renderInlineMarkdown(tableLines.join('\n'), theme)}
+          </p>
+        );
+        continue;
       }
     }
 
@@ -357,7 +377,7 @@ export default function MarkdownView({
     while (
       i < lines.length &&
       lines[i].trim() !== '' &&
-      !lines[i].trim().startsWith('#') &&
+      !lines[i].match(/^#{1,6}\s+/) &&
       !lines[i].trim().startsWith('```') &&
       !lines[i].trim().startsWith('>') &&
       !/^[\*\-]\s+/.test(lines[i].trim()) &&
@@ -365,6 +385,12 @@ export default function MarkdownView({
       !(lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) &&
       !/^(\s*[-*_]\s*){3,}$/.test(lines[i])
     ) {
+      paraLines.push(lines[i]);
+      i++;
+    }
+
+    // Bezpiecznik: jeśli żaden warunek nie dobrał linii, wymuś przejście o 1 linię
+    if (paraLines.length === 0) {
       paraLines.push(lines[i]);
       i++;
     }
@@ -385,6 +411,11 @@ export default function MarkdownView({
         {renderInlineMarkdown(paraText, theme)}
       </p>
     );
+
+    // Ostateczny bezpiecznik pętli: i ZAWSZE musi wzrosnąć
+    if (i <= prevI) {
+      i = prevI + 1;
+    }
   }
 
   return <div className="markdown-content">{blocks}</div>;
