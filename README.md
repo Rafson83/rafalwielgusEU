@@ -3,7 +3,7 @@
 > **Oficjalny serwis, blog esejistyczny i katalog programów edukacyjnych Rafała Wielgusa.**  
 > Przestrzeń łącząca praktyczną elektronikę, automatykę przemysłową w branży recyklingu, programowanie oraz psychologię w duchu idei **Long-Life Learning** (uczenia się przez całe życie).
 
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.2-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.3-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind-CSS_4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
@@ -72,7 +72,7 @@ Dwustopniowy lejek R&D i sprzedaży produktów edukacyjnych:
 
 | Warstwa | Technologia | Zastosowanie |
 |---|---|---|
-| **Framework** | Next.js 16.2 (App Router) | Architektura hybrydowa SSR / RSC / Client Components |
+| **Framework** | Next.js 16.3 (App Router) | Architektura hybrydowa SSR / RSC / Client Components |
 | **UI & Logika** | React 19 | Najnowszy standard komponentów z obsługą bezpiecznego renderowania |
 | **Stylizacja** | Tailwind CSS v4 | Nowoczesne utility-first CSS, responsywny design mobile-first |
 | **Typowanie** | TypeScript 5 | Ścisła kontrola typów i interfejsów danych |
