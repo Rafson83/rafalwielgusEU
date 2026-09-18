@@ -456,7 +456,10 @@ Nie bój się być rzemieślnikiem. Kup własną domenę, weź do ręki cyfrowe 
   },
 ];
 
+let postsTableInitialized = false;
+
 export async function ensurePostsTable() {
+  if (postsTableInitialized) return;
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS posts (
@@ -495,9 +498,11 @@ export async function ensurePostsTable() {
         }
       }
     }
+    postsTableInitialized = true;
   } catch (err) {
     // If DB is unreachable (e.g. local dev without MySQL), don't crash
     console.warn('Database not available, using fallback posts repository:', err);
+    postsTableInitialized = true;
   }
 }
 
