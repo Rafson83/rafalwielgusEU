@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import NewsletterBox from '@/components/NewsletterBox';
 import Footer from '@/components/Footer';
 import MarkdownView from '@/components/MarkdownView';
+import CommentsSection from '@/components/CommentsSection';
 
 interface Post {
   id: number;
@@ -336,6 +337,9 @@ export default function BlogPost() {
           <div className="mx-auto mt-14 max-w-3xl">
             <NewsletterBox source={`post-${post.slug}`} />
           </div>
+
+          {/* Sekcja Komentarzy i Dyskusji */}
+          <CommentsSection postSlug={post.slug} />
         </article>
 
         {/* Footer */}

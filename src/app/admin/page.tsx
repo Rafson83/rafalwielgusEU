@@ -42,12 +42,30 @@ export interface AdminProduct {
   forWhom?: string[];
 }
 
+export interface AdminComment {
+  id: number;
+  postSlug: string;
+  authorName: string;
+  authorEmail?: string;
+  content: string;
+  status: 'pending' | 'approved' | 'rejected' | 'spam';
+  moderationReason?: string;
+  isAuthorReply?: boolean;
+  parentId?: number | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'posts' | 'projects' | 'products'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'projects' | 'products' | 'comments'>('posts');
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [comments, setComments] = useState<AdminComment[]>([]);
+  const [commentStatusFilter, setCommentStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'spam'>('all');
+  const [replyModalComment, setReplyModalComment] = useState<AdminComment | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -115,6 +133,11 @@ export default function AdminDashboard() {
       if (prodRes.ok) {
         const prodData = await prodRes.json();
         setProducts(prodData);
+      }
+      const commentsRes = await fetch('/api/comments?admin=true');
+      if (commentsRes.ok) {
+        const commentsData = await commentsRes.json();
+        setComments(commentsData);
       }
     } catch (err) {
       console.error('Błąd pobierania danych dashboardu:', err);
@@ -460,6 +483,105 @@ export default function AdminDashboard() {
     return { total: posts.length, published, scheduled, drafts };
   }, [posts]);
 
+  // Akcje moderacji komentarzy
+  const handleUpdateCommentStatus = async (
+    id: number,
+    status: 'pending' | 'approved' | 'rejected' | 'spam'
+  ) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setMessage({ text: `Zaktualizowano status komentarza (#${id}) na: ${status}`, type: 'success' });
+        fetchData();
+      } else {
+        setMessage({ text: 'Błąd aktualizacji statusu komentarza', type: 'error' });
+      }
+    } catch {
+      setMessage({ text: 'Błąd połączenia z serwerem', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (id: number) => {
+    if (!confirm('Czy na pewno chcesz trwale usunąć ten komentarz?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setMessage({ text: 'Komentarz został trwale usunięty', type: 'success' });
+        fetchData();
+      } else {
+        setMessage({ text: 'Błąd usuwania komentarza', type: 'error' });
+      }
+    } catch {
+      setMessage({ text: 'Błąd połączenia z serwerem', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendAuthorReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyModalComment || !replyContent.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/comments/${replyModalComment.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postSlug: replyModalComment.postSlug,
+          content: replyContent.trim(),
+        }),
+      });
+      if (res.ok) {
+        setMessage({ text: 'Odpowiedź autora została opublikowana!', type: 'success' });
+        setReplyModalComment(null);
+        setReplyContent('');
+        fetchData();
+      } else {
+        setMessage({ text: 'Błąd publikacji odpowiedzi', type: 'error' });
+      }
+    } catch {
+      setMessage({ text: 'Błąd połączenia z serwerem', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Statystyki i filtry komentarzy
+  const commentStats = useMemo(() => {
+    const pending = comments.filter((c) => c.status === 'pending').length;
+    const approved = comments.filter((c) => c.status === 'approved').length;
+    const rejected = comments.filter((c) => c.status === 'rejected' || c.status === 'spam').length;
+    return { total: comments.length, pending, approved, rejected };
+  }, [comments]);
+
+  const filteredComments = useMemo(() => {
+    return comments.filter((c) => {
+      if (commentStatusFilter !== 'all') {
+        if (commentStatusFilter === 'rejected') {
+          if (c.status !== 'rejected' && c.status !== 'spam') return false;
+        } else if (c.status !== commentStatusFilter) {
+          return false;
+        }
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchAuthor = c.authorName.toLowerCase().includes(q);
+        const matchContent = c.content.toLowerCase().includes(q);
+        const matchSlug = c.postSlug.toLowerCase().includes(q);
+        return matchAuthor || matchContent || matchSlug;
+      }
+      return true;
+    });
+  }, [comments, commentStatusFilter, searchQuery]);
+
   if (!mounted) {
     return (
       <main className="min-h-screen bg-[#0b0f19] text-white p-4 sm:p-8 font-sans flex items-center justify-center">
@@ -578,6 +700,27 @@ export default function AdminDashboard() {
               <span>📦 Produkty (Katalog)</span>
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 {activeProducts.length} widoczne
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('comments');
+                setMessage({ text: '', type: '' });
+              }}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2.5 ${
+                activeTab === 'comments'
+                  ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]'
+                  : 'bg-white/[0.02] border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <span>💬 Dyskusja (Komentarze)</span>
+              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
+                commentStats.pending > 0
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                  : 'bg-white/10 text-white border-white/10'
+              }`}>
+                {comments.length} {commentStats.pending > 0 ? `(${commentStats.pending} do decyzji)` : ''}
               </span>
             </button>
           </div>
@@ -1147,6 +1290,353 @@ export default function AdminDashboard() {
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* ZAKŁADKA 4: MODERACJA DYSKUSJI I KOMENTARZY (AUTOMATYCZNA + AUTORSKA)     */}
+        {/* ========================================================================= */}
+        {activeTab === 'comments' && (
+          <div className="space-y-6">
+            {/* Statystyki Komentarzy */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white/[0.02] border border-white/[0.08] p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between text-gray-400 text-xs font-semibold">
+                  <span>Wszystkie wpisy</span>
+                  <span>💬</span>
+                </div>
+                <div className="mt-3 text-2xl sm:text-3xl font-bold font-mono text-white">
+                  {commentStats.total}
+                </div>
+              </div>
+
+              <div className="bg-amber-500/[0.04] border border-amber-500/20 p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between text-amber-300 text-xs font-semibold">
+                  <span>Do weryfikacji</span>
+                  <span>⏳</span>
+                </div>
+                <div className="mt-3 text-2xl sm:text-3xl font-bold font-mono text-amber-400">
+                  {commentStats.pending}
+                </div>
+              </div>
+
+              <div className="bg-emerald-500/[0.04] border border-emerald-500/20 p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between text-emerald-300 text-xs font-semibold">
+                  <span>Zaakceptowane</span>
+                  <span>✅</span>
+                </div>
+                <div className="mt-3 text-2xl sm:text-3xl font-bold font-mono text-emerald-400">
+                  {commentStats.approved}
+                </div>
+              </div>
+
+              <div className="bg-rose-500/[0.04] border border-rose-500/20 p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between text-rose-300 text-xs font-semibold">
+                  <span>Spam / Odrzucone</span>
+                  <span>🚫</span>
+                </div>
+                <div className="mt-3 text-2xl sm:text-3xl font-bold font-mono text-rose-400">
+                  {commentStats.rejected}
+                </div>
+              </div>
+            </div>
+
+            {/* Filtr Statusu Komentarzy */}
+            <div className="bg-[#111827]/40 border border-white/[0.08] p-6 rounded-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4 mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+                    <span>💬 Dyskusja Warsztatowa & Moderacja</span>
+                    <span className="text-xs font-normal text-gray-400 font-mono">
+                      ({filteredComments.length} {filteredComments.length === 1 ? 'komentarz' : 'komentarzy'})
+                    </span>
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Automatyczny filtr heurystyczny ocenia treść, linki i wulgaryzmy. Decyduj o zatwierdzeniu lub odpowiedz bezpośrednio jako Autor.
+                  </p>
+                </div>
+
+                {/* Przyciski filtrów */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setCommentStatusFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      commentStatusFilter === 'all'
+                        ? 'bg-white/20 border-white text-white'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Wszystkie ({commentStats.total})
+                  </button>
+                  <button
+                    onClick={() => setCommentStatusFilter('pending')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      commentStatusFilter === 'pending'
+                        ? 'bg-amber-600/30 border-amber-500 text-amber-200'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    ⏳ Do weryfikacji ({commentStats.pending})
+                  </button>
+                  <button
+                    onClick={() => setCommentStatusFilter('approved')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      commentStatusFilter === 'approved'
+                        ? 'bg-emerald-600/30 border-emerald-500 text-emerald-200'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    ✅ Zaakceptowane ({commentStats.approved})
+                  </button>
+                  <button
+                    onClick={() => setCommentStatusFilter('rejected')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      commentStatusFilter === 'rejected'
+                        ? 'bg-rose-600/30 border-rose-500 text-rose-200'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🚫 Spam / Odrzucone ({commentStats.rejected})
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista Komentarzy */}
+              {filteredComments.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <span className="text-4xl block mb-2">💬</span>
+                  <p className="text-sm font-semibold text-white">Brak komentarzy w tej kategorii.</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Gdy czytelnicy dodadzą komentarz pod artykułem, pojawi się on tutaj z automatyczną oceną jakościową.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredComments.map((comm) => {
+                    const isPending = comm.status === 'pending';
+                    const isApproved = comm.status === 'approved';
+                    const isSpamOrRejected = comm.status === 'spam' || comm.status === 'rejected';
+
+                    return (
+                      <div
+                        key={comm.id}
+                        className={`p-5 rounded-2xl border transition-all ${
+                          isPending
+                            ? 'bg-amber-500/[0.03] border-amber-500/30'
+                            : isApproved
+                            ? 'bg-white/[0.02] border-white/[0.08]'
+                            : 'bg-rose-500/[0.03] border-rose-500/20 opacity-75'
+                        }`}
+                      >
+                        {/* Header komentarza */}
+                        <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-white/5">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
+                              comm.isAuthorReply
+                                ? 'bg-indigo-600 text-white border border-indigo-400'
+                                : 'bg-white/10 text-gray-200 border border-white/10'
+                            }`}>
+                              {comm.isAuthorReply ? 'RW' : comm.authorName.slice(0, 2).toUpperCase()}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-sm text-white">
+                                  {comm.authorName}
+                                </span>
+                                {comm.isAuthorReply && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                    Autor
+                                  </span>
+                                )}
+                                {comm.authorEmail && (
+                                  <span className="text-xs text-gray-500 font-mono">
+                                    &lt;{comm.authorEmail}&gt;
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-0.5">
+                                <span>{new Date(comm.createdAt).toLocaleString('pl-PL')}</span>
+                                <span>&bull;</span>
+                                <span>Wpis ID: #{comm.id}</span>
+                                {comm.parentId && (
+                                  <>
+                                    <span>&bull;</span>
+                                    <span className="text-purple-300">↩ Odpowiedź na #{comm.parentId}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {/* Odnośnik do wpisu */}
+                            <a
+                              href={`/blog/${comm.postSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-gray-300 transition-all flex items-center gap-1"
+                            >
+                              <span>📄 /{comm.postSlug}</span>
+                              <span>↗</span>
+                            </a>
+
+                            {/* Badge statusu */}
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                              isApproved
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : isPending
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                            }`}>
+                              {isApproved ? '✅ Zaakceptowany' : isPending ? '⏳ Oczekuje' : comm.status === 'spam' ? '🛑 Spam' : '🚫 Odrzucony'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Baner diagnozy automatycznej moderacji */}
+                        {comm.moderationReason && (
+                          <div className="mt-3 px-3 py-1.5 rounded-lg bg-black/30 border border-white/5 text-[11px] text-gray-400 flex items-center gap-2">
+                            <span className="text-indigo-400">🤖 Automatyczna moderacja:</span>
+                            <span>{comm.moderationReason}</span>
+                          </div>
+                        )}
+
+                        {/* Treść wypowiedzi */}
+                        <div className="mt-3.5 p-4 rounded-xl bg-black/40 border border-white/[0.05] text-sm text-gray-200 font-serif leading-relaxed whitespace-pre-line">
+                          {comm.content}
+                        </div>
+
+                        {/* Akcje pod komentarzem */}
+                        <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {!isApproved && (
+                              <button
+                                onClick={() => handleUpdateCommentStatus(comm.id, 'approved')}
+                                disabled={loading}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 transition-all flex items-center gap-1"
+                              >
+                                <span>✅</span>
+                                <span>Zatwierdź wpis</span>
+                              </button>
+                            )}
+
+                            {!isPending && (
+                              <button
+                                onClick={() => handleUpdateCommentStatus(comm.id, 'pending')}
+                                disabled={loading}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-300 transition-all flex items-center gap-1"
+                              >
+                                <span>⏳</span>
+                                <span>Cofnij do weryfikacji</span>
+                              </button>
+                            )}
+
+                            {!isSpamOrRejected && (
+                              <button
+                                onClick={() => handleUpdateCommentStatus(comm.id, 'spam')}
+                                disabled={loading}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-300 transition-all flex items-center gap-1"
+                              >
+                                <span>🚫</span>
+                                <span>Oznacz jako spam</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                setReplyModalComment(comm);
+                                setReplyContent('');
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 transition-all flex items-center gap-1"
+                            >
+                              <span>💬</span>
+                              <span>Odpowiedz jako Rafał Wielgus</span>
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => handleDeleteComment(comm.id)}
+                            disabled={loading}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all"
+                            title="Usuń trwale ten wpis"
+                          >
+                            🗑️ Usuń wpis
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* MODAL ODPOWIEDZI AUTORA (RAFAŁ WIELGUS)                                   */}
+        {/* ========================================================================= */}
+        {replyModalComment && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-[#0f172a] border border-white/15 rounded-2xl w-full max-w-xl shadow-2xl p-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span>💬 Odpowiedz jako Autor</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      Rafał Wielgus
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Wątek: #{replyModalComment.id} autorstwa {replyModalComment.authorName}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setReplyModalComment(null)}
+                  className="text-gray-400 hover:text-white text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Oryginalny komentarz */}
+              <div className="mt-4 p-3.5 rounded-xl bg-black/40 border border-white/5 text-xs text-gray-300 italic max-h-24 overflow-y-auto">
+                „{replyModalComment.content}”
+              </div>
+
+              <form onSubmit={handleSendAuthorReply} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                    Treść Twojej odpowiedzi warsztatowej:
+                  </label>
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder="Wpisz odpowiedź merytoryczną, komentarz z hali lub podziękowanie..."
+                    rows={4}
+                    required
+                    className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:border-indigo-500 outline-none"
+                  ></textarea>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setReplyModalComment(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 text-gray-300 hover:text-white"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !replyContent.trim()}
+                    className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Publikuję...' : 'Opublikuj odpowiedź jako Autor →'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

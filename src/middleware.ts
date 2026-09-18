@@ -9,8 +9,14 @@ export async function middleware(request: NextRequest) {
 
   // Zabezpieczenie ścieżek panelu administratora oraz metod modyfikujących API (POST, PUT, DELETE)
   const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/login';
+  
+  // Publiczne endpointy akceptujące POST od czytelników
+  const isPublicApiPost = pathname.startsWith('/api/auth') ||
+                          pathname.startsWith('/api/newsletter') ||
+                          (pathname === '/api/comments' && request.method === 'POST');
+
   const isModifyApiRoute = pathname.startsWith('/api/') && 
-                           !pathname.startsWith('/api/auth') && 
+                           !isPublicApiPost && 
                            request.method !== 'GET';
 
   if (isAdminRoute || isModifyApiRoute) {
