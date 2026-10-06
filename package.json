@@ -16,7 +16,8 @@
     "next": "^16.3.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "resend": "^6.28.1"
+    "resend": "^6.28.1",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -27,5 +28,9 @@
     "eslint-config-next": "^16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "sharp": "^0.35.5",
+    "source-map-js": "^1.2.2"
   }
 }
