@@ -956,7 +956,7 @@ Bądź dumny ze swojego etatu. To on daje Ci chleb, uziemienie i twardy kontakt 
 let postsTableInitialized = false;
 
 export async function ensurePostsTable() {
-  if (postsTableInitialized) return;
+  if (postsTableInitialized || !db.isAvailable) return;
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS posts (
@@ -975,30 +975,9 @@ export async function ensurePostsTable() {
         publishedAt TIMESTAMP NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
-
-    const columns = [
-      ['tags', 'TEXT NULL'],
-      ['seoTitle', 'VARCHAR(255) NULL'],
-      ['seoDescription', 'TEXT NULL'],
-      ['thumbnailUrl', 'VARCHAR(500) NULL'],
-    ];
-
-    for (const [name, definition] of columns) {
-      try {
-        await db.query(`ALTER TABLE posts ADD COLUMN ${name} ${definition}`);
-      } catch (error: unknown) {
-        const errorCode = typeof error === 'object' && error !== null && 'code' in error
-          ? error.code
-          : undefined;
-        if (errorCode !== 'ER_DUP_FIELDNAME') {
-          throw error;
-        }
-      }
-    }
     postsTableInitialized = true;
   } catch (err) {
-    // If DB is unreachable (e.g. local dev without MySQL), don't crash
-    console.warn('Database not available, using fallback posts repository:', err);
+    console.warn('Baza danych niedostępna, używam repozytorium fallback dla artykułów:', err);
     postsTableInitialized = true;
   }
 }

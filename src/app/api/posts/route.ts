@@ -25,7 +25,11 @@ export async function GET(request: Request) {
       includeScheduled,
       referenceDate,
     });
-    return NextResponse.json(posts);
+    return NextResponse.json(posts, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Błąd pobierania postów:', error);
     return NextResponse.json({ error: 'Nie udało się pobrać artykułów' }, { status: 500 });

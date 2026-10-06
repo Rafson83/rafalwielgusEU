@@ -76,14 +76,16 @@ export async function getAllPostsForAdmin(refDate: Date = new Date()): Promise<A
   const customPosts = await readJsonFile<Post[]>(CUSTOM_POSTS_FILE, []);
 
   let dbPosts: Post[] = [];
-  try {
-    await ensurePostsTable();
-    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts ORDER BY createdAt DESC');
-    if (rows && rows.length > 0) {
-      dbPosts = rows as Post[];
+  if (db.isAvailable) {
+    try {
+      await ensurePostsTable();
+      const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM posts ORDER BY createdAt DESC');
+      if (rows && rows.length > 0) {
+        dbPosts = rows as Post[];
+      }
+    } catch {
+      // MySQL nieosiągalna w lokalnym środowisku
     }
-  } catch {
-    // MySQL nieosiągalna w lokalnym środowisku
   }
 
   // Połączenie bazy, postów użytkownika i fallbacku (bez duplikatów po slug)

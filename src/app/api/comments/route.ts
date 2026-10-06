@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
     }
 
     const approved = await getApprovedComments(postSlug);
-    return NextResponse.json(approved);
+    return NextResponse.json(approved, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('Błąd pobierania komentarzy:', error);
     return NextResponse.json(

@@ -18,7 +18,11 @@ export async function GET(
     // Pobranie z serwera z uwzględnieniem custom_posts i posts_override
     const effectivePost = await getEffectivePostBySlug(slug, { referenceDate, isPreview });
     if (effectivePost) {
-      return NextResponse.json(effectivePost);
+      return NextResponse.json(effectivePost, {
+        headers: {
+          'Cache-Control': isPreview ? 'no-store' : 'public, s-maxage=30, stale-while-revalidate=120',
+        },
+      });
     }
 
     // Fallback do standardowej biblioteki posts
@@ -27,7 +31,11 @@ export async function GET(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    return NextResponse.json(post);
+    return NextResponse.json(post, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Error fetching post by slug:', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });

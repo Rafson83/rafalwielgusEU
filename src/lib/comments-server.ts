@@ -165,6 +165,10 @@ let commentsTableInitialized = false;
 
 export async function ensureCommentsTable(): Promise<void> {
   if (commentsTableInitialized) return;
+  if (!db.isAvailable) {
+    commentsTableInitialized = true;
+    return;
+  }
 
   try {
     await db.query(`
@@ -213,18 +217,19 @@ async function writeJsonComments(comments: Comment[]): Promise<void> {
  * Pobierz publicznie zatwierdzone komentarze dla danego artykułu
  */
 export async function getApprovedComments(postSlug: string): Promise<Comment[]> {
-  await ensureCommentsTable();
-
-  try {
-    const [rows] = await db.query<RowDataPacket[]>(
-      'SELECT * FROM comments WHERE postSlug = ? AND status = "approved" ORDER BY createdAt ASC',
-      [postSlug]
-    );
-    if (rows && rows.length > 0) {
-      return rows as Comment[];
+  if (db.isAvailable) {
+    await ensureCommentsTable();
+    try {
+      const [rows] = await db.query<RowDataPacket[]>(
+        'SELECT * FROM comments WHERE postSlug = ? AND status = "approved" ORDER BY createdAt ASC',
+        [postSlug]
+      );
+      if (rows && rows.length > 0) {
+        return rows as Comment[];
+      }
+    } catch {
+      // Fallback do JSON
     }
-  } catch {
-    // Fallback do JSON
   }
 
   const fileComments = await readJsonComments();
@@ -237,17 +242,18 @@ export async function getApprovedComments(postSlug: string): Promise<Comment[]> 
  * Pobierz wszystkie komentarze (dla panelu administratora)
  */
 export async function getAllCommentsForAdmin(): Promise<Comment[]> {
-  await ensureCommentsTable();
-
-  try {
-    const [rows] = await db.query<RowDataPacket[]>(
-      'SELECT * FROM comments ORDER BY createdAt DESC'
-    );
-    if (rows && rows.length > 0) {
-      return rows as Comment[];
+  if (db.isAvailable) {
+    await ensureCommentsTable();
+    try {
+      const [rows] = await db.query<RowDataPacket[]>(
+        'SELECT * FROM comments ORDER BY createdAt DESC'
+      );
+      if (rows && rows.length > 0) {
+        return rows as Comment[];
+      }
+    } catch {
+      // Fallback do JSON
     }
-  } catch {
-    // Fallback do JSON
   }
 
   const fileComments = await readJsonComments();

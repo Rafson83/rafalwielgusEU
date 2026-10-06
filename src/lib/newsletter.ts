@@ -37,8 +37,16 @@ async function writeFallbackSubscribers(subscribers: Subscriber[]): Promise<void
   }
 }
 
+let subscribersTableInitialized = false;
+
 // Automatyczne tworzenie tabeli w bazie MySQL
 export async function ensureSubscribersTable(): Promise<boolean> {
+  if (subscribersTableInitialized) return db.isAvailable;
+  if (!db.isAvailable) {
+    subscribersTableInitialized = true;
+    return false;
+  }
+
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS newsletter_subscribers (
@@ -51,9 +59,11 @@ export async function ensureSubscribersTable(): Promise<boolean> {
         unsubscribedAt TIMESTAMP NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+    subscribersTableInitialized = true;
     return true;
   } catch (err) {
     console.warn('Baza MySQL niedostępna. Używanie lokalnego magazynu subskrypcji (fallback):', err);
+    subscribersTableInitialized = true;
     return false;
   }
 }

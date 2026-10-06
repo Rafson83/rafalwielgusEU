@@ -40,18 +40,25 @@ async function writeOverridesToFile(overrides: Record<string, ProductOverride>):
   }
 }
 
+let productOverridesTableInitialized = false;
+
 // Opcjonalna synchronizacja z bazą MySQL (jeśli jest skonfigurowana)
 async function getDbOverrides(): Promise<Record<string, ProductOverride>> {
+  if (!db.isAvailable) return {};
+
   try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS product_overrides (
-        slug VARCHAR(100) PRIMARY KEY,
-        status VARCHAR(50) NOT NULL,
-        statusLabel VARCHAR(255),
-        price VARCHAR(100),
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
+    if (!productOverridesTableInitialized) {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS product_overrides (
+          slug VARCHAR(100) PRIMARY KEY,
+          status VARCHAR(50) NOT NULL,
+          statusLabel VARCHAR(255),
+          price VARCHAR(100),
+          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+      productOverridesTableInitialized = true;
+    }
 
     const [rows] = await db.query<RowDataPacket[]>('SELECT slug, status, statusLabel, price FROM product_overrides');
     const result: Record<string, ProductOverride> = {};
@@ -64,6 +71,7 @@ async function getDbOverrides(): Promise<Record<string, ProductOverride>> {
     }
     return result;
   } catch {
+    productOverridesTableInitialized = true;
     return {};
   }
 }

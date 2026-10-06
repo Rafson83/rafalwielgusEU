@@ -1,26 +1,15 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import NewsletterBox from '@/components/NewsletterBox';
 import Footer from '@/components/Footer';
 import MarkdownView from '@/components/MarkdownView';
 import CommentsSection from '@/components/CommentsSection';
+import { getEffectivePostBySlug } from '@/lib/posts-server';
 
-interface Post {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-  category: string;
-  tags?: string;
-  seoTitle?: string;
-  seoDescription?: string;
-  thumbnailUrl?: string;
-  createdAt: string;
-  isScheduled?: boolean;
+interface PageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 function formatPolishDateWithWeekday(dateStr: string): string {
@@ -35,77 +24,42 @@ function formatPolishDateWithWeekday(dateStr: string): string {
   return `${capitalizedWeekday}, ${day}`;
 }
 
-export default function BlogPost() {
-  const params = useParams();
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [previewMode, setPreviewMode] = useState(false);
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getEffectivePostBySlug(slug, { isPreview: true });
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('preview') === 'true' || urlParams.get('admin') === 'true') {
-        setPreviewMode(true);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const res = await fetch(`/api/posts/${params.slug}`);
-        if (res.ok) {
-          const data = await res.json();
-          setPost(data);
-          document.title = data.seoTitle || `${data.title} — Rafał Wielgus`;
-
-          if (data.seoDescription) {
-            let description = document.querySelector('meta[name="description"]');
-            if (!description) {
-              description = document.createElement('meta');
-              description.setAttribute('name', 'description');
-              document.head.appendChild(description);
-            }
-            description.setAttribute('content', data.seoDescription);
-          }
-
-          if (data.thumbnailUrl) {
-            let image = document.querySelector('meta[property="og:image"]');
-            if (!image) {
-              image = document.createElement('meta');
-              image.setAttribute('property', 'og:image');
-              document.head.appendChild(image);
-            }
-            image.setAttribute('content', data.thumbnailUrl);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading post:', error);
-      } finally {
-        setLoading(false);
-      }
+  if (!post) {
+    return {
+      title: 'Artykuł nie został odnaleziony — Rafał Wielgus',
     };
-    if (params.slug) {
-      fetchPost();
-    }
-  }, [params.slug]);
-
-  const readingTime = post
-    ? Math.max(1, Math.ceil(post.content.trim().split(/\s+/).length / 200))
-    : 1;
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
-        <div className="mx-auto max-w-7xl px-5 py-24 text-center sm:px-8">
-          <div className="inline-block h-8 w-8 animate-spin border-4 border-[#181817] border-t-[#e85d3f]"></div>
-          <p className="mt-4 font-sans text-sm font-bold uppercase tracking-widest text-[#514f49]">
-            Wczytywanie artykułu...
-          </p>
-        </div>
-      </main>
-    );
   }
+
+  const title = post.seoTitle || `${post.title} — Rafał Wielgus`;
+  const description = post.seoDescription || post.content.slice(0, 160);
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: post.thumbnailUrl ? [{ url: post.thumbnailUrl }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: post.thumbnailUrl ? [post.thumbnailUrl] : undefined,
+    },
+  };
+}
+
+export default async function BlogPostPage({ params, searchParams }: PageProps) {
+  const { slug } = await params;
+  const sParams = await searchParams;
+  const previewMode = sParams.preview === 'true' || sParams.admin === 'true';
+
+  const post = await getEffectivePostBySlug(slug, { isPreview: previewMode });
 
   if (!post) {
     return (
@@ -210,18 +164,22 @@ export default function BlogPost() {
               >
                 Zobacz pełny harmonogram premier &rarr;
               </Link>
-              <button
-                onClick={() => setPreviewMode(true)}
+              <Link
+                href={`/blog/${post.slug}?preview=true`}
                 className="ml-auto font-sans text-xs font-bold text-[#514f49] underline decoration-[#e85d3f] underline-offset-4 hover:text-[#e85d3f]"
               >
                 Podgląd roboczy (dla autora)
-              </button>
+              </Link>
             </div>
           </div>
         </div>
       </main>
     );
   }
+
+  const readingTime = post
+    ? Math.max(1, Math.ceil(post.content.trim().split(/\s+/).length / 200))
+    : 1;
 
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
@@ -233,14 +191,17 @@ export default function BlogPost() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border border-[#e85d3f] bg-[#ede7dc] p-4 font-sans text-xs font-bold uppercase tracking-wider text-[#181817] shadow-[4px_4px_0_#e85d3f]">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#e85d3f] animate-ping"></span>
-              <span>Tryb podglądu roboczego &bull; Premiera czytelnicza: {formatPolishDateWithWeekday(post.createdAt)} o 09:00</span>
+              <span>
+                Tryb podglądu roboczego &bull; Premiera czytelnicza:{' '}
+                {formatPolishDateWithWeekday(post.createdAt)} o 09:00
+              </span>
             </div>
-            <button
-              onClick={() => setPreviewMode(false)}
+            <Link
+              href={`/blog/${post.slug}`}
               className="underline decoration-[#e85d3f] underline-offset-2 hover:text-[#e85d3f]"
             >
               Zamknij podgląd roboczy &times;
-            </button>
+            </Link>
           </div>
         )}
 
