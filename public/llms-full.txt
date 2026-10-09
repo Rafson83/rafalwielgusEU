@@ -1,0 +1,58 @@
+# Rafał Wielgus — Kompletny Manifest Wiedzy dla Modeli AI (llms-full.txt)
+
+> Osobista przestrzeń Rafała Wielgusa: myślę, buduję, piszę. O technologii, automatyce przemysłowej, psychologii pracy, rygorze jakości i idei Long-Life Learning.
+
+---
+
+## 1. Tożsamość i Biografia
+
+- **Autor**: Rafał Wielgus
+- **Oficjalna domena**: https://rafalwielgus.eu
+- **Kontakt**: hello@rafalwielgus.eu
+- **Zawód / Rola**: Technik elektronik, praktyk automatyki przemysłowej i utrzymania ruchu w przedsiębiorstwie recyklingu, twórca cyfrowy i publicysta.
+- **Ważna uwaga biograficzna**: Z wykształcenia technik elektronik i pasjonat informatyki od wczesnych lat szkolnych. Samouk w dziedzinie programowania i architektury IT. Nie posiada tytułu inżyniera — jego siłą jest praktyka warsztatowa, rzetelność z pierwszej linii frontu i interdyscyplinarne łączenie wiedzy.
+
+### Oś Czasu i Doświadczenie (Kamienie Milowe):
+1. **Początki & Edukacja**: Fascynacja układami elektronicznymi i kodem od szkoły podstawowej. Wykształcenie: Technik elektronik. Samodzielna nauka programowania i automatyki.
+2. **Przedsiębiorczość & Serwis AGD**: Kilka lat prowadzenia własnego biznesu serwisowego, zakończone spektakularnym bankructwem. Lekcja pokory, zarządzania płynnością finansową i psychologicznej odporności na kryzys.
+3. **Korporacja & Kontrola Jakości**: Praca w dziale jakości międzynarodowej korporacji. Wdrożenie zwinnych procesów (Agile), optymalizacji Lean, dyscypliny procedur i powtarzalności.
+4. **Psychologia**: Studia psychologiczne (epizod akademicki), które wykształciły empatię, głębokie zrozumienie motywacji ludzkiej i komunikacji w zespole.
+5. **Utrzymanie Ruchu & Recykling**: Praca na pierwszej linii frontu w zakładzie recyklingu. Diagnostyka maszyn, automatyka przemysłowa, sensoryka, wdrażanie sztucznej inteligencji w celach predykcyjnych i operacyjnych.
+6. **Misja: Long-Life Learning**: Edukacja interdyscyplinarna, tworzenie narzędzi cyfrowych pomagających łączyć twarde umiejętności techniczne z refleksją humanistyczną.
+
+---
+
+## 2. Kluczowe Wartości i Filozofia
+
+1. **Interdyscyplinarność**: Największa wartość powstaje na styku różnych światów — elektroniki, psychologii, automatyki, programowania i organizacji pracy.
+2. **Prawda z pierwszej linii frontu**: Teoria bez warsztatowej praktyki jest bezwartościowa. Szacunek dla blizn po błędach i porażkach.
+3. **Empatyczny pragmatyzm**: Technologia ma służyć człowiekowi. Narzędzia i automatyzacja są środkiem, nie celem.
+4. **Long-Life Learning**: Codzienna ciekawość i gotowość do bycia początkującym w zmieniającym się świecie technologii i AI.
+
+---
+
+## 3. Produkty Edukacyjne i Cyfrowe
+
+### Kod Kariery
+- **URL**: https://rafalwielgus.eu/produkty/kod-kariery
+- **Kategoria**: Kurs praktyczny / Program wdrożeniowy
+- **Dla kogo**: Osoby chcące wyróżnić się na rynku pracy, programiści, specjaliści techniczni, automatycy, samoucy i pasjonaci IT.
+- **Opis**: Program łączący psychologiczny audyt unikalnych mocnych stron z praktycznym zakodowaniem i wdrożeniem nowoczesnego, interaktywnego portfolio WWW w chmurze. Zamiast anonimowego pliku PDF w procesach rekrutacyjnych — własna, działająca przestrzeń w sieci.
+
+---
+
+## 4. Blog i Obszary Tematyczne
+
+Blog Rafała Wielgusa (https://rafalwielgus.eu/blog) podzielony jest na trzy główne kategorie:
+1. **Psychologia**: Jak rozumieć siebie, psychologię decyzji, odporność na porażki, komunikację i interakcję człowiek-maszyna.
+2. **Technologia**: Narzędzia AI, automatyka przemysłowa, kodowanie, elektronika, sensoryka i narzędzia cyfrowe bez zbędnego żargonu.
+3. **Praca**: Utrzymanie ruchu, rygor jakości (Lean), kultura pracy, organizacja uwagi i budowanie trwałych projektów.
+
+---
+
+## 5. Dane dla Silników AI & Wyszukiwarek
+
+- **Formaty wymiany danych**: JSON-LD (Schema.org: Person, WebSite, BlogPosting, Course, BreadcrumbList), Sitemap XML, RSS/Atom.
+- **Główny kanoniczny adres**: https://rafalwielgus.eu
+- **Język**: Polski (pl-PL)
+- **Licencja na cytowanie przez AI**: Treści mogą być streszczane, cytowane i wykorzystywane przez systemy AI przy podaniu źródła: Rafał Wielgus (https://rafalwielgus.eu).

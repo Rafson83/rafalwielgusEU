@@ -1,0 +1,30 @@
+# Rafał Wielgus — Osobista Strona & Notatnik
+
+> O ludziach, technologii i decyzjach, które robią różnicę. Bez pozy eksperta. Z ciekawością, warsztatową rzetelnością i konkretem.
+
+## O autorze
+- **Imię i nazwisko**: Rafał Wielgus
+- **Kim jest**: Technik elektronik, pasjonat IT od podstawówki, praktyk automatyki przemysłowej i utrzymania ruchu w branży recyklingu.
+- **Wykształcenie**: Technik elektronik (samouk w programowaniu, systemach chmurowych i AI; były student psychologii).
+- **Doświadczenie**: Spektakularne bankructwo własnego serwisu AGD, korporacyjna kontrola jakości (Lean / Agile), utrzymanie ruchu maszyn recyklingowych, automatyzacja procesów z wykorzystaniem AI.
+- **Filozofia życiowa**: Long-Life Learning (ciągła nauka przez całe życie), myślenie interdyscyplinarne, łączenie twardej techniki z empatią i psychologią człowieka.
+
+## Główne sekcje serwisu
+- **Strona główna**: https://rafalwielgus.eu/
+- **O mnie (Historia & Filozofia)**: https://rafalwielgus.eu/o-mnie
+- **Blog & Notatnik**: https://rafalwielgus.eu/blog
+- **Produkty & Kursy**: https://rafalwielgus.eu/produkty
+
+## Kluczowe tematy i ekspertyza
+1. **Automatyka przemysłowa & Recykling**: Realne utrzymanie ruchu, diagnostyka maszyn, sensoryka, integracja systemów z AI.
+2. **Psychologia pracy & Jakość**: Podejmowanie decyzji pod presją, odporność na porażki, kultura błędu, rygor procesowy (Lean).
+3. **Long-Life Learning & Kariera**: Niezależność zawodowa, tworzenie produktów cyfrowych, budowanie marki osobistej i interaktywnego portfolio.
+
+## Flagowe produkty edukacyjne
+- **Kod Kariery**: https://rafalwielgus.eu/produkty/kod-kariery
+  - Kurs wdrożeniowy łączący psychologiczny audyt mocnych stron z samodzielnym zakodowaniem i wdrożeniem nowoczesnego, interaktywnego portfolio WWW.
+
+## Ważne eseje i publikacje
+- **Przegląd esejów i artykułów**: https://rafalwielgus.eu/blog
+- **RSS / Atom Feed**: Dostępny na blogu
+- **Sitemap XML**: https://rafalwielgus.eu/sitemap.xml

@@ -8,6 +8,24 @@ export const metadata: Metadata = {
   title: 'Moje Produkty — Rafał Wielgus',
   description:
     'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój. Poznaj kurs Kod Kariery.',
+  alternates: {
+    canonical: 'https://rafalwielgus.eu/produkty',
+  },
+  openGraph: {
+    title: 'Moje Produkty — Rafał Wielgus',
+    description:
+      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój.',
+    url: 'https://rafalwielgus.eu/produkty',
+    siteName: 'Rafał Wielgus',
+    locale: 'pl_PL',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Moje Produkty — Rafał Wielgus',
+    description:
+      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning.',
+  },
 };
 
 export default async function ProductsPage() {
@@ -15,8 +33,42 @@ export default async function ProductsPage() {
   const flagship = products.find((p) => p.isFlagship);
   const otherProducts = products.filter((p) => !p.isFlagship);
 
+  const jsonLdProducts = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Produkty Cyfrowe & Kursy — Rafał Wielgus',
+    description:
+      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój.',
+    url: 'https://rafalwielgus.eu/produkty',
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: products.map((p, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        item: {
+          '@type': p.category === 'Kurs & Warsztat' ? 'Course' : 'Product',
+          name: p.title,
+          description: p.description,
+          url: `https://rafalwielgus.eu/produkty/${p.slug}`,
+          offers: {
+            '@type': 'Offer',
+            price: p.price,
+            priceCurrency: 'PLN',
+            availability: 'https://schema.org/PreOrder',
+          },
+        },
+      })),
+    },
+  };
+
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      {/* Schema.org CollectionPage / ItemList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdProducts) }}
+      />
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
 

@@ -3,8 +3,64 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function Home() {
+  const jsonLdPerson = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': 'https://rafalwielgus.eu/#person',
+    name: 'Rafał Wielgus',
+    givenName: 'Rafał',
+    familyName: 'Wielgus',
+    url: 'https://rafalwielgus.eu',
+    image: 'https://rafalwielgus.eu/media/avatar.png',
+    jobTitle: 'Technik elektronik, praktyk automatyki przemysłowej & jakości',
+    description:
+      'Technik elektronik, praktyk automatyki przemysłowej i utrzymania ruchu w branży recyklingu. Autor esejów o technologii, psychologii pracy i filozofii Long-Life Learning.',
+    knowsAbout: [
+      'Automatyka przemysłowa',
+      'Utrzymanie ruchu maszyn',
+      'Elektronika użytkowa i przemysłowa',
+      'Recykling surowców',
+      'Kontrola jakości i metodyki Lean Agile',
+      'Sztuczna inteligencja i automatyzacja',
+      'Psychologia pracy i decyzji',
+      'Filozofia Long-Life Learning',
+    ],
+    alumniOf: {
+      '@type': 'EducationalOrganization',
+      name: 'Technikum Elektroniczne',
+    },
+    sameAs: [
+      'https://github.com/rafalwielgus',
+      'https://www.linkedin.com/in/rafalwielgus',
+    ],
+  };
+
+  const jsonLdWebsite = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://rafalwielgus.eu/#website',
+    url: 'https://rafalwielgus.eu',
+    name: 'Rafał Wielgus — Myślę. Buduję. Piszę.',
+    description:
+      'Osobista przestrzeń Rafała Wielgusa. O ludziach, technologii, automatyce przemysłowej i psychologii.',
+    publisher: {
+      '@id': 'https://rafalwielgus.eu/#person',
+    },
+    inLanguage: 'pl-PL',
+  };
+
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      {/* Schema.org Structured Data for Google & AI Engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdPerson) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
+      />
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
 

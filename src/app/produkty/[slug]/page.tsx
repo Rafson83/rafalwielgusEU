@@ -1,26 +1,78 @@
-'use client';
-
-import { useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import ProductWaitlistForm from '@/components/ProductWaitlistForm';
 import { getProductBySlug } from '@/lib/products';
 
-export default function ProductDetailPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const isPreview = searchParams.get('preview') === 'admin' || searchParams.get('preview') === 'true';
+interface PageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const sParams = await searchParams;
+  const isPreview = sParams.preview === 'admin' || sParams.preview === 'true';
   const product = getProductBySlug(slug, { includeDrafts: isPreview });
 
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  if (!product) {
+    return {
+      title: 'Produkt nie został odnaleziony — Rafał Wielgus',
+      robots: { index: false, follow: false },
+    };
+  }
 
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitted(true);
+  const title = `${product.title} — Rafał Wielgus`;
+  const description = `${product.headline}. ${product.description}`;
+  const canonicalUrl = `https://rafalwielgus.eu/produkty/${product.slug}`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      'Rafał Wielgus',
+      product.title,
+      product.category,
+      'Long-Life Learning',
+      'kurs online',
+      'portfolio WWW',
+      'rozwój kariery',
+    ],
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'Rafał Wielgus',
+      locale: 'pl_PL',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    robots: {
+      index: !product.isDraft,
+      follow: true,
+      googleBot: {
+        index: !product.isDraft,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
   };
+}
+
+export default async function ProductDetailPage({ params, searchParams }: PageProps) {
+  const { slug } = await params;
+  const sParams = await searchParams;
+  const isPreview = sParams.preview === 'admin' || sParams.preview === 'true';
+  const product = getProductBySlug(slug, { includeDrafts: isPreview });
 
   if (!product) {
     return (
@@ -52,8 +104,62 @@ export default function ProductDetailPage() {
     );
   }
 
+  const jsonLdProduct = {
+    '@context': 'https://schema.org',
+    '@type': product.category === 'Kurs & Warsztat' ? 'Course' : 'Product',
+    name: product.title,
+    description: `${product.headline}. ${product.description}`,
+    provider: {
+      '@type': 'Person',
+      name: 'Rafał Wielgus',
+      url: 'https://rafalwielgus.eu/o-mnie',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'PLN',
+      availability: 'https://schema.org/PreOrder',
+      url: `https://rafalwielgus.eu/produkty/${product.slug}`,
+    },
+  };
+
+  const jsonLdBreadcrumbs = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Strona główna',
+        item: 'https://rafalwielgus.eu',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Produkty',
+        item: 'https://rafalwielgus.eu/produkty',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.title,
+        item: `https://rafalwielgus.eu/produkty/${product.slug}`,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdProduct) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
+      />
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
         {product && (product.isDraft || product.status === 'Szkic') && (
@@ -126,42 +232,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="mt-6">
-                {submitted ? (
-                  <div className="border border-[#181817] bg-[#181817] p-5 text-[#f4f0e9]">
-                    <span className="font-sans text-xs font-bold uppercase tracking-wider text-[#e85d3f]">
-                      ✓ Jesteś na liście!
-                    </span>
-                    <p className="mt-2 font-serif text-base font-bold">
-                      Dziękuję za zaufanie.
-                    </p>
-                    <p className="mt-1 font-sans text-xs text-[#f4f0e9]/80">
-                      Otrzymasz powiadomienie jako pierwszy oraz specjalny bonus na adres: <strong>{email}</strong>.
-                    </p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-                    <p className="font-sans text-xs font-bold uppercase tracking-wider text-[#181817]">
-                      Dołącz do listy oczekujących (Early Bird):
-                    </p>
-                    <input
-                      type="email"
-                      required
-                      placeholder="Twój adres e-mail"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-[#181817] bg-white px-4 py-3 font-sans text-sm outline-none focus:border-[#e85d3f]"
-                    />
-                    <button
-                      type="submit"
-                      className="w-full bg-[#181817] py-3.5 font-sans text-xs font-bold uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#e85d3f]"
-                    >
-                      {product.ctaText} &rarr;
-                    </button>
-                    <p className="font-sans text-[11px] text-[#514f49]">
-                      Zero spamu. Tylko konkretne informacje o premierze i darmowe materiały.
-                    </p>
-                  </form>
-                )}
+                <ProductWaitlistForm ctaText={product.ctaText} />
               </div>
 
               <div className="mt-8 border-t border-[#181817]/20 pt-6 space-y-3 font-sans text-xs">
@@ -380,31 +451,7 @@ export default function ProductDetailPage() {
             </p>
 
             <div className="mt-8 flex justify-center">
-              {submitted ? (
-                <p className="font-sans text-sm font-bold text-[#e85d3f]">
-                  ✓ Dziękujemy! Twój e-mail ({email}) został dodany do listy oczekujących.
-                </p>
-              ) : (
-                <form
-                  onSubmit={handleWaitlistSubmit}
-                  className="flex w-full max-w-md flex-col gap-3 sm:flex-row"
-                >
-                  <input
-                    type="email"
-                    required
-                    placeholder="Wpisz swój e-mail"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 border border-[#181817] bg-white px-4 py-3 font-sans text-sm outline-none focus:border-[#e85d3f]"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-[#181817] px-6 py-3 font-sans text-xs font-bold uppercase tracking-wider text-white transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#e85d3f]"
-                  >
-                    Zapisz się &rarr;
-                  </button>
-                </form>
-              )}
+              <ProductWaitlistForm ctaText="Zapisz się na listę" isBottom={true} />
             </div>
           </div>
         </section>

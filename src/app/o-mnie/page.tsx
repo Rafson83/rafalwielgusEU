@@ -5,7 +5,26 @@ import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'O mnie — Rafał Wielgus',
-  description: 'Historia o elektronice, przedsiębiorczości, spektakularnym bankructwie, psychologii, automatyce przemysłowej i filozofii Long-Life Learning.',
+  description:
+    'Historia o elektronice, przedsiębiorczości, spektakularnym bankructwie, psychologii, automatyce przemysłowej i filozofii Long-Life Learning.',
+  alternates: {
+    canonical: 'https://rafalwielgus.eu/o-mnie',
+  },
+  openGraph: {
+    title: 'O mnie — Rafał Wielgus',
+    description:
+      'Historia o elektronice, przedsiębiorczości, spektakularnym bankructwie, psychologii, automatyce przemysłowej i filozofii Long-Life Learning.',
+    url: 'https://rafalwielgus.eu/o-mnie',
+    siteName: 'Rafał Wielgus',
+    locale: 'pl_PL',
+    type: 'profile',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'O mnie — Rafał Wielgus',
+    description:
+      'Historia o elektronice, przedsiębiorczości, spektakularnym bankructwie, psychologii, automatyce przemysłowej i filozofii Long-Life Learning.',
+  },
 };
 
 export default function AboutPage() {
@@ -83,8 +102,43 @@ export default function AboutPage() {
     },
   ];
 
+  const jsonLdAbout = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'O mnie — Rafał Wielgus',
+    description:
+      'Biografia i filozofia Rafała Wielgusa: od elektroniki i spektakularnego bankructwa po kontrolę jakości, psychologię i automatykę w recyklingu.',
+    url: 'https://rafalwielgus.eu/o-mnie',
+    mainEntity: {
+      '@type': 'Person',
+      name: 'Rafał Wielgus',
+      jobTitle: 'Technik elektronik, praktyk automatyki przemysłowej & jakości',
+      description:
+        'Technik elektronik, praktyk utrzymania ruchu i automatyki przemysłowej w recyklingu, twórca koncepcji Long-Life Learning.',
+      alumniOf: {
+        '@type': 'EducationalOrganization',
+        name: 'Technikum Elektroniczne',
+      },
+      knowsAbout: [
+        'Automatyka przemysłowa',
+        'Utrzymanie ruchu',
+        'Zarządzanie jakością Lean Agile',
+        'Elektronika',
+        'Psychologia pracy',
+        'Sztuczna inteligencja',
+      ],
+      url: 'https://rafalwielgus.eu',
+    },
+  };
+
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdAbout) }}
+      />
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
 
