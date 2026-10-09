@@ -171,6 +171,67 @@ export async function getEffectivePostBySlug(
   return post;
 }
 
+export async function getRelatedPosts(
+  currentSlug: string,
+  limit = 2
+): Promise<AdminPost[]> {
+  const all = await getAllPostsForAdmin();
+  const currentPost = all.find((p) => p.slug === currentSlug);
+
+  // Pobieramy kandydatów z pominięciem bieżącego wpisu i szkiców
+  const candidates = all.filter(
+    (p) => p.slug !== currentSlug && p.postStatus !== 'draft'
+  );
+
+  if (!currentPost) {
+    return candidates.slice(0, limit);
+  }
+
+  const currentTags = (currentPost.tags || '')
+    .toLowerCase()
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  const scored = candidates.map((post) => {
+    let score = 0;
+
+    // 1. Zgodność kategorii (+3 punkty)
+    if (post.category && post.category.toLowerCase() === currentPost.category.toLowerCase()) {
+      score += 3;
+    }
+
+    // 2. Wspólne tagi (+1 punkt za każdy wspólny tag)
+    const postTags = (post.tags || '')
+      .toLowerCase()
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    for (const tag of postTags) {
+      if (currentTags.includes(tag)) {
+        score += 1;
+      }
+    }
+
+    // 3. Lekki bonus dla już opublikowanych
+    if (post.postStatus === 'published') {
+      score += 0.5;
+    }
+
+    return { post, score };
+  });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime();
+  });
+
+  return scored.slice(0, limit).map((item) => item.post);
+}
+
 export async function updatePostStatus(
   slug: string,
   newStatus: 'draft' | 'scheduled' | 'published',

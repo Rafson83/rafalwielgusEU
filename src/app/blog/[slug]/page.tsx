@@ -5,23 +5,13 @@ import NewsletterBox from '@/components/NewsletterBox';
 import Footer from '@/components/Footer';
 import MarkdownView from '@/components/MarkdownView';
 import CommentsSection from '@/components/CommentsSection';
-import { getEffectivePostBySlug } from '@/lib/posts-server';
+import RelatedPosts from '@/components/RelatedPosts';
+import { getEffectivePostBySlug, getRelatedPosts } from '@/lib/posts-server';
+import { formatPolishDateWithWeekday } from '@/lib/posts';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-function formatPolishDateWithWeekday(dateStr: string): string {
-  const d = new Date(dateStr);
-  const weekday = d.toLocaleDateString('pl-PL', { weekday: 'long' });
-  const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-  const day = d.toLocaleDateString('pl-PL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${capitalizedWeekday}, ${day}`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -31,25 +21,61 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) {
     return {
       title: 'Artykuł nie został odnaleziony — Rafał Wielgus',
+      robots: { index: false, follow: false },
     };
   }
 
   const title = post.seoTitle || `${post.title} — Rafał Wielgus`;
-  const description = post.seoDescription || post.content.slice(0, 160);
+  const description = post.seoDescription || post.content.split('\n\n')[0].slice(0, 160);
+  const keywords = post.tags
+    ? post.tags.split(',').map((t) => t.trim())
+    : ['Rafał Wielgus', post.category, 'Long-Life Learning', 'automatyka', 'psychologia', 'jakosc'];
+  const canonicalUrl = `https://rafalwielgus.eu/blog/${post.slug}`;
+  const ogImages = post.thumbnailUrl
+    ? [{ url: post.thumbnailUrl, width: 1200, height: 630, alt: post.title }]
+    : undefined;
 
   return {
     title,
     description,
+    keywords,
+    authors: [{ name: 'Rafał Wielgus', url: 'https://rafalwielgus.eu/o-mnie' }],
+    creator: 'Rafał Wielgus',
+    publisher: 'Rafał Wielgus',
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title,
       description,
-      images: post.thumbnailUrl ? [{ url: post.thumbnailUrl }] : undefined,
+      url: canonicalUrl,
+      siteName: 'Rafał Wielgus — Blog & Notatnik',
+      locale: 'pl_PL',
+      type: 'article',
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt || post.createdAt,
+      authors: ['https://rafalwielgus.eu/o-mnie'],
+      section: post.category,
+      tags: keywords,
+      images: ogImages,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      creator: '@rafalwielgus',
       images: post.thumbnailUrl ? [post.thumbnailUrl] : undefined,
+    },
+    robots: {
+      index: !post.isScheduled,
+      follow: true,
+      googleBot: {
+        index: !post.isScheduled,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
   };
 }
@@ -90,6 +116,9 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
       </main>
     );
   }
+
+  // Pobierz powiązane wpisy do sekcji "Przeczytaj również"
+  const relatedPosts = await getRelatedPosts(post.slug, 2);
 
   // Jeśli artykuł jest zaplanowany na przyszłą datę i czytelnik nie włączył trybu podglądu roboczego
   if (post.isScheduled && !previewMode) {
@@ -172,6 +201,9 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
               </Link>
             </div>
           </div>
+
+          {/* Sekcja Przeczytaj również dla zaplanowanego wpisu */}
+          <RelatedPosts posts={relatedPosts} />
         </div>
       </main>
     );
@@ -181,8 +213,72 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
     ? Math.max(1, Math.ceil(post.content.trim().split(/\s+/).length / 200))
     : 1;
 
+  // Ustrukturyzowane dane JSON-LD (Schema.org) dla wyszukiwarek (Google Article & Breadcrumbs)
+  const jsonLdArticle = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.seoDescription || post.content.split('\n\n')[0].slice(0, 160),
+    image: post.thumbnailUrl ? [post.thumbnailUrl] : [],
+    datePublished: post.createdAt,
+    dateModified: post.updatedAt || post.createdAt,
+    author: {
+      '@type': 'Person',
+      name: 'Rafał Wielgus',
+      jobTitle: 'Technik elektronik, praktyk automatyki przemysłowej & jakości',
+      url: 'https://rafalwielgus.eu/o-mnie',
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Rafał Wielgus',
+      url: 'https://rafalwielgus.eu',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://rafalwielgus.eu/blog/${post.slug}`,
+    },
+    keywords: post.tags || '',
+    articleSection: post.category,
+    inLanguage: 'pl-PL',
+  };
+
+  const jsonLdBreadcrumbs = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Strona główna',
+        item: 'https://rafalwielgus.eu',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog & Notatnik',
+        item: 'https://rafalwielgus.eu/blog',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `https://rafalwielgus.eu/blog/${post.slug}`,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-[#f4f0e9] text-[#181817] selection:bg-[#e85d3f] selection:text-white">
+      {/* Skrypty JSON-LD dla robotów wyszukiwarek */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumbs) }}
+      />
+
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Navbar />
 
@@ -293,6 +389,9 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
               </div>
             </div>
           </div>
+
+          {/* Sekcja: Przeczytaj również (Dwie propozycje powiązanych esejów) */}
+          <RelatedPosts posts={relatedPosts} />
 
           {/* Newsletter Box */}
           <div className="mx-auto mt-14 max-w-3xl">
