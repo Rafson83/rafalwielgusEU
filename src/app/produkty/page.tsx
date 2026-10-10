@@ -5,16 +5,16 @@ import Footer from '@/components/Footer';
 import { getEffectiveProducts } from '@/lib/products-server';
 
 export const metadata: Metadata = {
-  title: 'Moje Produkty — Rafał Wielgus',
+  title: 'Kod Kariery & Edukacja — Rafał Wielgus',
   description:
-    'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój. Poznaj kurs Kod Kariery.',
+    'Praktyczny program wdrożeniowy Kod Kariery wspierający filozofię Long-Life Learning i interdyscyplinarny rozwój zawodowy. Zakoduj swoją przewagę na rynku pracy.',
   alternates: {
     canonical: 'https://rafalwielgus.eu/produkty',
   },
   openGraph: {
-    title: 'Moje Produkty — Rafał Wielgus',
+    title: 'Kod Kariery & Edukacja — Rafał Wielgus',
     description:
-      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój.',
+      'Praktyczny program wdrożeniowy Kod Kariery wspierający filozofię Long-Life Learning i interdyscyplinarny rozwój.',
     url: 'https://rafalwielgus.eu/produkty',
     siteName: 'Rafał Wielgus',
     locale: 'pl_PL',
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Moje Produkty — Rafał Wielgus',
+    title: 'Kod Kariery & Edukacja — Rafał Wielgus',
     description:
-      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning.',
+      'Praktyczny program wdrożeniowy Kod Kariery wspierający filozofię Long-Life Learning.',
   },
 };
 
@@ -36,9 +36,9 @@ export default async function ProductsPage() {
   const jsonLdProducts = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Produkty Cyfrowe & Kursy — Rafał Wielgus',
+    name: 'Kod Kariery & Edukacja — Rafał Wielgus',
     description:
-      'Praktyczne produkty cyfrowe, szablony i kursy wspierające filozofię Long-Life Learning i interdyscyplinarny rozwój.',
+      'Praktyczny kurs i program wdrożeniowy Kod Kariery wspierający filozofię Long-Life Learning.',
     url: 'https://rafalwielgus.eu/produkty',
     mainEntity: {
       '@type': 'ItemList',
@@ -76,13 +76,13 @@ export default async function ProductsPage() {
         <section className="border-b border-[#181817] py-14 sm:py-20">
           <div className="max-w-4xl">
             <p className="mb-6 font-sans text-xs font-bold uppercase tracking-[0.25em] text-[#e85d3f]">
-              03 / Produkty Cyfrowe & Edukacja
+              03 / Programy Edukacyjne & Kursy
             </p>
             <h1 className="font-serif text-[clamp(2.75rem,7vw,6.5rem)] font-black leading-[0.92] tracking-[-0.05em]">
               Narzędzia i wiedza dla interdyscyplinarnych umysłów.
             </h1>
             <p className="mt-8 max-w-2xl font-sans text-lg leading-8 text-[#514f49] sm:text-xl">
-              Praktyczne kursy, szablony i przewodniki wspierające filozofię <strong>Long-Life Learning</strong>. Zero akademickiej teorii — wyłącznie sprawdzone narzędzia łączące technikę, psychologię i procesowe myślenie.
+              Praktyczny program wdrożeniowy wspierający filozofię <strong>Long-Life Learning</strong>. Zero akademickiej teorii — wyłącznie sprawdzone narzędzia łączące technikę, psychologię i procesowe myślenie.
             </p>
           </div>
         </section>
