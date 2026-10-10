@@ -184,72 +184,74 @@ export default async function ProductsPage() {
         )}
 
         {/* Secondary Products */}
-        <section className="border-b border-[#181817] py-14 sm:py-20">
-          <div className="mb-12">
-            <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#e85d3f]">
-              Katalog
-            </p>
-            <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
-              Pozostałe materiały i narzędzia
-            </h2>
-            <p className="mt-2 max-w-xl font-sans text-sm text-[#514f49]">
-              Autorskie rozwiązania stworzone z myślą o systematycznym rozwoju osobistym i technicznym.
-            </p>
-          </div>
+        {otherProducts.length > 0 && (
+          <section className="border-b border-[#181817] py-14 sm:py-20">
+            <div className="mb-12">
+              <p className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-[#e85d3f]">
+                Katalog
+              </p>
+              <h2 className="mt-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
+                Pozostałe materiały i narzędzia
+              </h2>
+              <p className="mt-2 max-w-xl font-sans text-sm text-[#514f49]">
+                Autorskie rozwiązania stworzone z myślą o systematycznym rozwoju osobistym i technicznym.
+              </p>
+            </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
-            {otherProducts.map((prod) => (
-              <article
-                key={prod.id}
-                className="group flex flex-col justify-between border border-[#181817] bg-[#ede7dc]/20 p-8 transition-all hover:-translate-y-1 hover:border-[#e85d3f] hover:shadow-[6px_6px_0_#181817]"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="bg-[#181817] px-2.5 py-1 font-sans text-[10px] font-bold uppercase tracking-wider text-white">
-                      {prod.category}
-                    </span>
-                    <span className="font-sans text-xs font-bold text-[#e85d3f]">
-                      {prod.statusLabel}
-                    </span>
+            <div className="grid gap-8 md:grid-cols-2">
+              {otherProducts.map((prod) => (
+                <article
+                  key={prod.id}
+                  className="group flex flex-col justify-between border border-[#181817] bg-[#ede7dc]/20 p-8 transition-all hover:-translate-y-1 hover:border-[#e85d3f] hover:shadow-[6px_6px_0_#181817]"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="bg-[#181817] px-2.5 py-1 font-sans text-[10px] font-bold uppercase tracking-wider text-white">
+                        {prod.category}
+                      </span>
+                      <span className="font-sans text-xs font-bold text-[#e85d3f]">
+                        {prod.statusLabel}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-6 font-serif text-2xl font-bold tracking-tight transition-colors group-hover:text-[#e85d3f] sm:text-3xl">
+                      <Link href={`/produkty/${prod.slug}`}>{prod.title}</Link>
+                    </h3>
+
+                    <p className="mt-2 font-serif text-base italic text-[#514f49]">
+                      „{prod.headline}”
+                    </p>
+
+                    <p className="mt-4 font-sans text-sm leading-6 text-[#514f49]">
+                      {prod.description}
+                    </p>
+
+                    <div className="mt-6 border-t border-[#181817]/10 pt-4">
+                      <ul className="space-y-2 font-sans text-xs text-[#514f49]">
+                        {prod.outcomes.slice(0, 2).map((item, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <span className="text-[#e85d3f]">▸</span>
+                            <span><strong>{item.title}</strong></span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
 
-                  <h3 className="mt-6 font-serif text-2xl font-bold tracking-tight transition-colors group-hover:text-[#e85d3f] sm:text-3xl">
-                    <Link href={`/produkty/${prod.slug}`}>{prod.title}</Link>
-                  </h3>
-
-                  <p className="mt-2 font-serif text-base italic text-[#514f49]">
-                    „{prod.headline}”
-                  </p>
-
-                  <p className="mt-4 font-sans text-sm leading-6 text-[#514f49]">
-                    {prod.description}
-                  </p>
-
-                  <div className="mt-6 border-t border-[#181817]/10 pt-4">
-                    <ul className="space-y-2 font-sans text-xs text-[#514f49]">
-                      {prod.outcomes.slice(0, 2).map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="text-[#e85d3f]">▸</span>
-                          <span><strong>{item.title}</strong></span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="mt-8 flex items-center justify-between border-t border-[#181817]/20 pt-5">
+                    <span className="font-serif text-lg font-bold text-[#181817]">{prod.price}</span>
+                    <Link
+                      href={`/produkty/${prod.slug}`}
+                      className="inline-flex items-center font-sans text-xs font-bold uppercase tracking-wider text-[#181817] transition-colors hover:text-[#e85d3f]"
+                    >
+                      Dowiedz się więcej <span className="ml-1 text-[#e85d3f]">&rarr;</span>
+                    </Link>
                   </div>
-                </div>
-
-                <div className="mt-8 flex items-center justify-between border-t border-[#181817]/20 pt-5">
-                  <span className="font-serif text-lg font-bold text-[#181817]">{prod.price}</span>
-                  <Link
-                    href={`/produkty/${prod.slug}`}
-                    className="inline-flex items-center font-sans text-xs font-bold uppercase tracking-wider text-[#181817] transition-colors hover:text-[#e85d3f]"
-                  >
-                    Dowiedz się więcej <span className="ml-1 text-[#e85d3f]">&rarr;</span>
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Philosophy behind products */}
         <section className="py-14 sm:py-20">
