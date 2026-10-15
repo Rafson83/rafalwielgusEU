@@ -4,6 +4,9 @@ import Footer from '@/components/Footer';
 import BlogClientView from '@/components/BlogClientView';
 import { getEffectivePublicPosts } from '@/lib/posts-server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'Blog & Notatnik — Rafał Wielgus',
   description:

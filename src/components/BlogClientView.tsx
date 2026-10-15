@@ -40,9 +40,14 @@ function formatPolishDateWithWeekday(dateStr: string): string {
 }
 
 export default function BlogClientView({ initialPosts }: { initialPosts: Post[] }) {
-  const [posts] = useState<Post[]>(initialPosts);
+  const posts = initialPosts;
   const [selectedCategory, setSelectedCategory] = useState('Wszystkie');
   const [activeTab, setActiveTab] = useState<'published' | 'scheduled' | 'all'>('published');
+  const [clientNow, setClientNow] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    setClientNow(Date.now());
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -67,14 +72,13 @@ export default function BlogClientView({ initialPosts }: { initialPosts: Post[] 
     }
   };
 
-  // Segregacja postów na opublikowane i zaplanowane
+  // Segregacja postów na opublikowane i zaplanowane (dynamicznie wg czasu)
   const { publishedPosts, scheduledPosts } = useMemo(() => {
-    const now = new Date().getTime();
     const pub: Post[] = [];
     const sched: Post[] = [];
 
-    posts.forEach((post) => {
-      const isSched = post.isScheduled ?? new Date(post.createdAt).getTime() > now;
+    initialPosts.forEach((post) => {
+      const isSched = new Date(post.createdAt).getTime() > clientNow;
       if (isSched) {
         sched.push({ ...post, isScheduled: true });
       } else {
@@ -86,7 +90,7 @@ export default function BlogClientView({ initialPosts }: { initialPosts: Post[] 
     sched.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     return { publishedPosts: pub, scheduledPosts: sched };
-  }, [posts]);
+  }, [initialPosts, clientNow]);
 
   // Filtrowanie według wybranej kategorii i aktywnej zakładki
   const currentList = useMemo(() => {

@@ -178,9 +178,9 @@ export async function getRelatedPosts(
   const all = await getAllPostsForAdmin();
   const currentPost = all.find((p) => p.slug === currentSlug);
 
-  // Pobieramy kandydatów z pominięciem bieżącego wpisu i szkiców
+  // Pobieramy kandydatów z pominięciem bieżącego wpisu i nieopublikowanych/zaplanowanych
   const candidates = all.filter(
-    (p) => p.slug !== currentSlug && p.postStatus !== 'draft'
+    (p) => p.slug !== currentSlug && p.postStatus === 'published'
   );
 
   if (!currentPost) {
