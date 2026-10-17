@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 export interface CommentItem {
   id: number;
@@ -389,7 +390,14 @@ export default function CommentsSection({ postSlug }: CommentsSectionProps) {
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
             <p className="font-sans text-[11px] text-[#514f49]">
-              💡 Wskazówka: Unikaj linków promocyjnych, by Twój wpis nie trafił do kolejki spamu.
+              💡 Publikując wpis, akceptujesz{' '}
+              <Link
+                href="/polityka-prywatnosci"
+                className="underline decoration-[#e85d3f] underline-offset-2 hover:text-[#181817]"
+              >
+                Politykę prywatności
+              </Link>
+              . Twój e-mail nie będzie widoczny publicznie.
             </p>
 
             <button

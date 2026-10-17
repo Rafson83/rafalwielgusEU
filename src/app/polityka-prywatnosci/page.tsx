@@ -110,6 +110,18 @@ export default function PrivacyPolicyPage() {
                     <li><strong>Podstawa prawna:</strong> Prawnie uzasadniony interes administratora (art. 6 ust. 1 lit. f RODO).</li>
                   </ul>
                 </div>
+
+                <div className="border border-[#181817] bg-white p-6 shadow-[4px_4px_0_#181817]">
+                  <h3 className="font-serif text-lg font-bold text-[#181817]">
+                    D. Komentarze i dyskusje pod artykułami
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-[#514f49]">
+                    <li><strong>Zakres danych:</strong> Twój podpis/pseudonim, opcjonalny adres e-mail (niewidoczny publicznie) oraz treść wypowiedzi.</li>
+                    <li><strong>Cel:</strong> Umożliwienie merytorycznej wymiany myśli pod esejami, ochrona przed spamem oraz powiadamianie o odpowiedzi autora (jeśli podano e-mail).</li>
+                    <li><strong>Podstawa prawna:</strong> Zgoda wyrażona poprzez świadome wysłanie formularza komentarza (art. 6 ust. 1 lit. a RODO) oraz prawnie uzasadniony interes administratora w moderacji treści i filtrowaniu spamu (art. 6 ust. 1 lit. f RODO).</li>
+                    <li><strong>Okres retencji:</strong> Do czasu istnienia artykułu na blogu lub zgłoszenia przez Ciebie żądania usunięcia wypowiedzi.</li>
+                  </ul>
+                </div>
               </div>
             </section>
 

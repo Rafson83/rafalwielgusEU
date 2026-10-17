@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 interface NewsletterBoxProps {
   className?: string;
@@ -126,7 +127,14 @@ export default function NewsletterBox({ className = '', source = 'blog' }: Newsl
             )}
 
             <p className="mt-4 font-sans text-xs text-[#6b6860]">
-              Szanuję Twoją prywatność. Żadnego spamu. Zawsze możesz wypisać się jednym kliknięciem.
+              Zapisując się, akceptujesz zasady i{' '}
+              <Link
+                href="/polityka-prywatnosci"
+                className="underline decoration-[#e85d3f] underline-offset-2 hover:text-[#181817]"
+              >
+                Politykę prywatności
+              </Link>
+              . Zero spamu. Model Double Opt-In. Wypisanie jednym kliknięciem.
             </p>
           </form>
         )}
