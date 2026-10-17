@@ -316,38 +316,52 @@ export default function TwoFactorModal({ isOpen, onClose, onSuccess }: TwoFactor
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold">1</span>
-                <h4 className="text-sm font-bold text-white">Zeskanuj kod QR w aplikacji Authenticator</h4>
+                <h4 className="text-sm font-bold text-white">Zeskanuj kod QR lub wpisz klucz w aplikacji Authenticator</h4>
               </div>
-              <p className="text-xs text-gray-400">
-                Otwórz aplikację (Google Authenticator, Microsoft Authenticator, 1Password, Apple Passwords lub 2FAS) i zeskanuj poniższy kod aparatem:
+              <p className="text-xs text-gray-300">
+                Otwórz aplikację <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong>, <strong>Apple Passwords</strong> lub <strong>2FAS</strong>:
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                <div className="p-2 bg-white rounded-xl shrink-0">
+              <div className="flex flex-col md:flex-row items-center gap-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="p-3 bg-white rounded-2xl shrink-0 shadow-2xl">
                   <img
                     src={setupData.qrCodeDataUrl}
                     alt="Kod QR 2FA"
-                    className="h-44 w-44"
+                    className="h-52 w-52 sm:h-56 sm:w-56 block object-contain"
                   />
                 </div>
 
-                <div className="space-y-3 text-left">
-                  <p className="text-xs text-gray-300">Nie możesz zeskanować? Wpisz klucz ręcznie:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="rounded bg-black/50 px-2.5 py-1.5 font-mono text-xs text-amber-300 font-bold select-all">
-                      {setupData.secret}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={handleCopySecret}
-                      className="rounded border border-white/10 px-2.5 py-1 text-xs text-gray-300 hover:bg-white/10"
-                    >
-                      {copiedKey ? '✓ Skopiowano' : 'Kopiuj'}
-                    </button>
+                <div className="space-y-3 text-left w-full">
+                  <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200 space-y-1.5">
+                    <p className="font-semibold flex items-center gap-1.5">
+                      <span>💡</span>
+                      <span>Co dzieje się po zeskanowaniu?</span>
+                    </p>
+                    <p className="text-[11px] text-indigo-300/90 leading-relaxed">
+                      Aplikacja aparatu w Authenticatorze po ułamku sekundy automatycznie się zamyka i wraca do ekranu głównego. Na liście kont pojawi się nowa pozycja <strong>RafalWielgus</strong> z 6-cyfrowym kodem.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-gray-400">
-                    Typ konta: TOTP / Czasowy (30s) &bull; Długość: 6 cyfr
-                  </p>
+
+                  <div className="pt-1">
+                    <p className="text-xs font-semibold text-gray-300 mb-1.5">
+                      Nie chcesz skanować aparatem? Wpisz klucz ręcznie:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="rounded-lg bg-black/60 px-3 py-2 font-mono text-xs text-amber-300 font-bold tracking-wider select-all border border-amber-500/20 break-all">
+                        {setupData.secret}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={handleCopySecret}
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-gray-200 hover:bg-white/15 transition-all shrink-0"
+                      >
+                        {copiedKey ? '✓ Skopiowano' : 'Kopiuj'}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-1.5">
+                      W Authenticatorze wybierz <strong>+</strong> &rarr; <strong>Wpisz klucz konfiguracji</strong> (Nazwa: <code>RafalWielgus</code>, Typ: <code>W oparciu o czas</code>).
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -114,26 +114,36 @@ export function verifyTOTP(token: string, secret: string, window = 1): boolean {
 
 /**
  * Tworzy URI zgodne ze standardem Google Authenticator (KeyUriFormat)
+ * Zapewnia 100% kompatybilności ASCII (eliminuje polskie znaki i myślniki typograficzne,
+ * które powodują awarie parsera w aplikacjach mobilnych).
  */
 export function getTotpUri(
   secret: string,
-  accountName = 'admin@rafalwielgus.eu',
-  issuer = 'RafalWielgus.eu'
+  accountName = 'admin',
+  issuer = 'RafalWielgus'
 ): string {
-  const encodedIssuer = encodeURIComponent(issuer);
-  const encodedAccount = encodeURIComponent(accountName);
-  return `otpauth://totp/${encodedIssuer}:${encodedAccount}?secret=${secret}&issuer=${encodedIssuer}&algorithm=SHA1&digits=6&period=30`;
+  const cleanIssuer = issuer
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '') || 'RafalWielgus';
+
+  const cleanAccount = accountName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9.@_-]/g, '') || 'admin';
+
+  return `otpauth://totp/${cleanIssuer}:${cleanAccount}?secret=${secret}&issuer=${cleanIssuer}`;
 }
 
 /**
- * Generuje kod QR jako Data URL (PNG/SVG) do wyświetlenia w przeglądarce
+ * Generuje kod QR jako Data URL (PNG) do wyświetlenia w przeglądarce
  */
 export async function generateQrCodeDataUrl(totpUri: string): Promise<string> {
   return QRCode.toDataURL(totpUri, {
-    width: 280,
+    width: 320,
     margin: 2,
     color: {
-      dark: '#181817',
+      dark: '#000000',
       light: '#ffffff',
     },
     errorCorrectionLevel: 'M',

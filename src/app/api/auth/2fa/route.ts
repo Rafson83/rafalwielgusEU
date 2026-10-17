@@ -34,7 +34,7 @@ export async function GET() {
 export async function POST() {
   try {
     const secret = generateTotpSecret(20);
-    const totpUri = getTotpUri(secret, 'admin@rafalwielgus.eu', 'Rafał Wielgus — Panel');
+    const totpUri = getTotpUri(secret, 'admin', 'RafalWielgus');
     const qrCodeDataUrl = await generateQrCodeDataUrl(totpUri);
     const backupCodes = generateBackupCodes(8);
 
