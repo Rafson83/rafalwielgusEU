@@ -34,7 +34,27 @@ export default function Footer({
       </div>
 
       <div className="flex flex-col items-start gap-3 text-xs sm:items-end sm:gap-2">
-        <div className="flex flex-wrap items-center gap-4 text-[#514f49]">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[#514f49]">
+          <a
+            href="/rss.xml"
+            target="_blank"
+            rel="alternate"
+            type="application/rss+xml"
+            className="inline-flex items-center gap-1.5 underline decoration-[#e85d3f] underline-offset-4 hover:text-[#e85d3f]"
+            title="Subskrybuj kanał RSS"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#e85d3f]"></span>
+            RSS Feed
+          </a>
+          <span>&bull;</span>
+          <a
+            href="/sitemap.xml"
+            target="_blank"
+            className="underline decoration-[#e85d3f] underline-offset-4 hover:text-[#181817]"
+          >
+            Sitemap XML
+          </a>
+          <span>&bull;</span>
           <Link
             href="/polityka-prywatnosci"
             className="underline decoration-[#e85d3f] underline-offset-4 hover:text-[#181817]"

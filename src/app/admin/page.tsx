@@ -67,6 +67,7 @@ export default function AdminDashboard() {
   const [replyModalComment, setReplyModalComment] = useState<AdminComment | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [indexNowLoading, setIndexNowLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
   // Filtry i wyszukiwarka
@@ -554,6 +555,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTriggerIndexNow = async () => {
+    setIndexNowLoading(true);
+    try {
+      const res = await fetch('/api/indexnow', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMessage({
+          text: `⚡ ${data.message}`,
+          type: 'success',
+        });
+      } else {
+        setMessage({
+          text: `Błąd zgłaszania IndexNow: ${data.message || 'Nieznany błąd'}`,
+          type: 'error',
+        });
+      }
+    } catch {
+      setMessage({
+        text: 'Błąd połączenia z serwerem podczas wysyłania do IndexNow',
+        type: 'error',
+      });
+    } finally {
+      setIndexNowLoading(false);
+    }
+  };
+
   // Statystyki i filtry komentarzy
   const commentStats = useMemo(() => {
     const pending = comments.filter((c) => c.status === 'pending').length;
@@ -611,7 +638,16 @@ export default function AdminDashboard() {
               Pełny edytor Markdown, harmonogram publikacji, inkubator projektów i katalog produktów cyfrowych
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleTriggerIndexNow}
+              disabled={indexNowLoading}
+              title="Wyślij natychmiastowe zgłoszenie IndexNow do Microsoft Bing, Yandex, Seznam i Naver"
+              className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl hover:bg-amber-500/20 active:scale-[0.98] transition-all text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <span>⚡</span>
+              <span>{indexNowLoading ? 'Zgłaszanie IndexNow...' : 'IndexNow (Bing/Yandex)'}</span>
+            </button>
             <a
               href="/"
               target="_blank"

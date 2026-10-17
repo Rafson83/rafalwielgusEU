@@ -50,6 +50,14 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://rafalwielgus.eu',
+    types: {
+      'application/rss+xml': [
+        {
+          url: 'https://rafalwielgus.eu/rss.xml',
+          title: 'Rafał Wielgus — Blog & Notatnik (RSS)',
+        },
+      ],
+    },
   },
   openGraph: {
     type: 'website',
@@ -66,6 +74,15 @@ export const metadata: Metadata = {
     description:
       'Osobista strona Rafała Wielgusa. O ludziach, technologii, automatyce przemysłowej, psychologii i rzemiośle pracy.',
     creator: '@rafalwielgus',
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    yandex: process.env.NEXT_PUBLIC_YANDEX_SITE_VERIFICATION || undefined,
+    other: {
+      ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? { 'msvalidate.01': [process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION] }
+        : {}),
+    },
   },
   robots: {
     index: true,

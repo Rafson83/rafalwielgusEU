@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import MarkdownView from '@/components/MarkdownView';
 import CommentsSection from '@/components/CommentsSection';
 import RelatedPosts from '@/components/RelatedPosts';
+import ShareButtons from '@/components/ShareButtons';
 import { getEffectivePostBySlug, getRelatedPosts } from '@/lib/posts-server';
 import { formatPolishDateWithWeekday } from '@/lib/posts';
 
@@ -34,9 +35,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? post.tags.split(',').map((t) => t.trim())
     : ['Rafał Wielgus', post.category, 'Long-Life Learning', 'automatyka', 'psychologia', 'jakosc'];
   const canonicalUrl = `https://rafalwielgus.eu/blog/${post.slug}`;
-  const ogImages = post.thumbnailUrl
-    ? [{ url: post.thumbnailUrl, width: 1200, height: 630, alt: post.title }]
-    : undefined;
+  const defaultOgUrl = `https://rafalwielgus.eu/blog/${post.slug}/opengraph-image`;
+  const ogImages = [
+    {
+      url: post.thumbnailUrl || defaultOgUrl,
+      width: 1200,
+      height: 630,
+      alt: post.title,
+    },
+  ];
 
   return {
     title,
@@ -67,7 +74,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       creator: '@rafalwielgus',
-      images: post.thumbnailUrl ? [post.thumbnailUrl] : undefined,
+      images: [post.thumbnailUrl || defaultOgUrl],
     },
     robots: {
       index: !post.isScheduled,
@@ -222,7 +229,7 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.seoDescription || post.content.split('\n\n')[0].slice(0, 160),
-    image: post.thumbnailUrl ? [post.thumbnailUrl] : [],
+    image: [post.thumbnailUrl || `https://rafalwielgus.eu/blog/${post.slug}/opengraph-image`],
     datePublished: post.createdAt,
     dateModified: post.updatedAt || post.createdAt,
     author: {
@@ -365,6 +372,15 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
           {/* Article Content Body */}
           <div className="mx-auto mt-12 max-w-3xl font-serif text-lg leading-[1.85] text-[#181817] sm:text-xl sm:leading-[1.9]">
             <MarkdownView content={post.content} theme="light" enableDropCap={true} />
+          </div>
+
+          {/* Sekcja udostępniania i wiralności */}
+          <div className="mx-auto mt-10 max-w-3xl">
+            <ShareButtons
+              title={post.title}
+              slug={post.slug}
+              category={post.category}
+            />
           </div>
 
           {/* Author Box */}

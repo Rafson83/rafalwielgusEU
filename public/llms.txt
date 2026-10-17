@@ -26,5 +26,5 @@
 
 ## Ważne eseje i publikacje
 - **Przegląd esejów i artykułów**: https://rafalwielgus.eu/blog
-- **RSS / Atom Feed**: Dostępny na blogu
+- **RSS / Atom Feed**: https://rafalwielgus.eu/rss.xml
 - **Sitemap XML**: https://rafalwielgus.eu/sitemap.xml

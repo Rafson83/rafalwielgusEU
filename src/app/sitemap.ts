@@ -47,8 +47,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const postRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: post.updatedAt ? new Date(post.updatedAt) : new Date(post.createdAt),
-    changeFrequency: 'monthly',
-    priority: 0.7,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+    images: [post.thumbnailUrl || `${baseUrl}/blog/${post.slug}/opengraph-image`],
   }));
 
   // 3. Produkty w katalogu
@@ -58,6 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: 'monthly',
     priority: 0.7,
+    images: [`${baseUrl}/opengraph-image`],
   }));
 
   return [...staticRoutes, ...postRoutes, ...productRoutes];

@@ -139,6 +139,19 @@ export default function BlogClientView({ initialPosts }: { initialPosts: Post[] 
                 <strong className="text-[#181817]">{publishedPosts.length}</strong> esejów, kolejnych{' '}
                 <strong className="text-[#181817]">{scheduledPosts.length}</strong> zaplanowanych w kolejce.
               </p>
+              <div className="mt-2">
+                <a
+                  href="/rss.xml"
+                  target="_blank"
+                  rel="alternate"
+                  type="application/rss+xml"
+                  className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-wider text-[#e85d3f] hover:text-[#181817] underline decoration-[#e85d3f] underline-offset-4"
+                  title="Pobierz lub subskrybuj kanał RSS"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#e85d3f]"></span>
+                  Subskrybuj kanał RSS &rarr;
+                </a>
+              </div>
             </div>
           </div>
 

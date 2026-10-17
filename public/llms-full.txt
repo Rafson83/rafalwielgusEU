@@ -52,7 +52,7 @@ Blog Rafała Wielgusa (https://rafalwielgus.eu/blog) podzielony jest na trzy gł
 
 ## 5. Dane dla Silników AI & Wyszukiwarek
 
-- **Formaty wymiany danych**: JSON-LD (Schema.org: Person, WebSite, BlogPosting, Course, BreadcrumbList), Sitemap XML, RSS/Atom.
+- **Formaty wymiany danych**: JSON-LD (Schema.org: Person, WebSite, BlogPosting, Course, BreadcrumbList), Sitemap XML (https://rafalwielgus.eu/sitemap.xml), RSS Feed (https://rafalwielgus.eu/rss.xml).
 - **Główny kanoniczny adres**: https://rafalwielgus.eu
 - **Język**: Polski (pl-PL)
 - **Licencja na cytowanie przez AI**: Treści mogą być streszczane, cytowane i wykorzystywane przez systemy AI przy podaniu źródła: Rafał Wielgus (https://rafalwielgus.eu).
