@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
                 Kto jest administratorem Twoich danych?
               </h2>
               <p className="mt-4">
-                Administratorem Twoich danych osobowych jest <strong>Rafał Wielgus</strong>, działający we Wrocławiu (Polska).
+                Administratorem Twoich danych osobowych jest <strong>Rafał Wielgus</strong>, zamieszkały: Radomice (gm. Lipno, woj. kujawsko-pomorskie, Polska).
               </p>
               <p className="mt-2">
                 We wszelkich sprawach dotyczących przetwarzania Twoich danych osobowych, realizacji praw RODO oraz plików cookies możesz skontaktować się bezpośrednio drogą elektroniczną pod adresem:{' '}

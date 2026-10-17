@@ -96,7 +96,7 @@ export function generateConfirmationEmailHtml(params: {
               </p>
               <p style="margin: 0 0 8px 0;">
                 Technik elektronik, automatyka przemysłowa & pasjonat IT.<br>
-                Wrocław, Polska &bull; <a href="https://rafalwielgus.eu" style="color: #181817; text-decoration: underline;">rafalwielgus.eu</a>
+                Radomice (k. Lipna), Polska &bull; <a href="https://rafalwielgus.eu" style="color: #181817; text-decoration: underline;">rafalwielgus.eu</a>
               </p>
               <p style="margin: 0; font-size: 11px;">
                 Chcesz zrezygnować? <a href="${unsubscribeUrl}" style="color: #e85d3f; text-decoration: underline;">Wypisz się z newslettera</a>
