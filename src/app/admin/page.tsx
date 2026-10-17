@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import MarkdownView from '@/components/MarkdownView';
+import TwoFactorModal from '@/components/TwoFactorModal';
 
 export interface AdminPost {
   id: number;
@@ -69,6 +70,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [indexNowLoading, setIndexNowLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [twoFactorModalOpen, setTwoFactorModalOpen] = useState(false);
+  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean | null>(null);
 
   // Filtry i wyszukiwarka
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,6 +126,18 @@ export default function AdminDashboard() {
   } | null>(null);
 
   // Pobieranie danych
+  const checkTwoFactorStatus = async () => {
+    try {
+      const res = await fetch('/api/auth/2fa');
+      if (res.ok) {
+        const data = await res.json();
+        setIs2FAEnabled(Boolean(data.enabled));
+      }
+    } catch {
+      // Błąd sieciowy ignorowany
+    }
+  };
+
   const fetchData = async () => {
     try {
       const postsRes = await fetch('/api/posts?admin=true');
@@ -140,6 +155,7 @@ export default function AdminDashboard() {
         const commentsData = await commentsRes.json();
         setComments(commentsData);
       }
+      await checkTwoFactorStatus();
     } catch (err) {
       console.error('Błąd pobierania danych dashboardu:', err);
     }
@@ -647,6 +663,18 @@ export default function AdminDashboard() {
             >
               <span>⚡</span>
               <span>{indexNowLoading ? 'Zgłaszanie IndexNow...' : 'IndexNow (Bing/Yandex)'}</span>
+            </button>
+            <button
+              onClick={() => setTwoFactorModalOpen(true)}
+              title="Weryfikacja dwuetapowa (2FA Authenticator)"
+              className={`px-4 py-2 border rounded-xl hover:opacity-90 active:scale-[0.98] transition-all text-xs font-semibold flex items-center gap-1.5 ${
+                is2FAEnabled
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20'
+                  : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
+              }`}
+            >
+              <span>{is2FAEnabled ? '🛡️' : '🔐'}</span>
+              <span>2FA {is2FAEnabled ? 'Aktywne' : 'Konfiguruj'}</span>
             </button>
             <a
               href="/"
@@ -2488,6 +2516,17 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* MODAL 2FA / TOTP AUTHENTICATOR                                            */}
+        {/* ========================================================================= */}
+        <TwoFactorModal
+          isOpen={twoFactorModalOpen}
+          onClose={() => {
+            setTwoFactorModalOpen(false);
+            checkTwoFactorStatus();
+          }}
+        />
       </div>
     </main>
   );
