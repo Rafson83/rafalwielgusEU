@@ -791,74 +791,81 @@ Wejdź do sali konferencyjnej, spójrz ludziom w oczy i pamiętaj: prawdziwą wa
   {
     id: 13,
     slug: 'drugie-zycie-krzemu-recykling-elektroniki-projektowanie-systemow',
-    title: 'Drugie życie krzemu: Czego praca w recyklingu elektroniki uczy o projektowaniu nowoczesnych systemów',
+    title: 'Kondensator za 80 groszy i zatrzymana fabryka: Czego utrzymanie ruchu w recyklingu uczy o projektowaniu systemów',
     category: 'Technologia',
-    tags: 'technologia, recykling, sprzet, right-to-repair, architektura, elektronika, ekologia, trwalosc',
-    seoTitle: 'Drugie życie krzemu: Lekcje z recyklingu elektroniki — Rafał Wielgus',
+    tags: 'technologia, recykling, tworzywa, utrzymanie-ruchu, automatyka, falowniki, right-to-repair, architektura, elektronika, trwalosc',
+    seoTitle: 'Kondensator za 80 groszy i zatrzymana fabryka: Lekcje z recyklingu — Rafał Wielgus',
     seoDescription:
-      'Góry spalonego sprzętu z powodu kondensatora za 80 groszy. O prawie do naprawy (Right to Repair), planowanym postarzaniu i modułowej architekturze kodu.',
+      'Setki ton tworzyw PP i PE na naczepach, a wielka linia staje przez spuchnięty kondensator w falowniku. O prawie do naprawy, planowanym postarzaniu i architekturze systemów.',
     published: 1,
     createdAt: '2026-10-27T09:00:00.000Z', // Wtorek Tydzień 7
     thumbnailUrl: '',
-    content: `Każdego dnia przez bramę zakładu recyklingu, w którym dbam o utrzymanie ruchu maszyn, przejeżdżają wielotonowe ciężarówki. Na naczepach przywożą to, co współczesny świat uznał za bezwartościowy odpad: wielkie kontenery wypełnione płytami głównymi, inwerterami przemysłowymi, sterownikami, komputerami, pompami ciepła i drobnym sprzętem AGD.
+    content: `Każdego dnia przez bramę zakładu recyklingu, w którym dbam o utrzymanie ruchu maszyn, przejeżdżają wielotonowe ciężarówki. Na naczepach nie przywożą jednak elektroniki ani krzemu. Przywożą poliolefiny — setki ton sprasowanego polipropylenu (PP) i polietylenu (PE). To, co współczesny świat uznał za bezwartościowy odpad: zderzaki, połamane skrzynki transportowe, kanistry po chemii, palety, rury i kilometry poprzemysłowej folii.
 
-Dla większości ludzi to tylko kupa złomu — sterty plastiku, aluminium i miedzi przeznaczone na przemiał pod nożami potężnych kruszarek.
+Dla większości ludzi to po prostu góra plastiku przeznaczona na przemiał pod nożami potężnych kruszarek, kąpiel w wannach flotacyjnych i przetopienie w cylindrach wielkich wytłaczarek (ekstruderów), by dać surowcowi drugie życie w postaci czystego regranulatu.
 
-Dla mnie, technika elektronika z powołania, to widok głęboko poruszający. Kiedy przechadzam się wzdłuż tych pryzm, widzę miliony roboczogodzin inżynierów, miliardy tranzystorów wytrawionych w czystym krzemie z niewyobrażalną precyzją, rzadkie pierwiastki wydobyte kosztem dewastacji środowiska w odległych zakątkach globu.
+Dla mnie — technika elektronika z powołania, który na co dzień odpowiada za to, by ten potężny park maszynowy nie stanął ani na sekundę — to widok o wiele głębszy. Praca na styku fizycznego recyklingu tworzyw i automatyki przemysłowej to najbardziej bezwzględna szkoła inżynierii, jaką można sobie wyobrazić. Uczy pokory z dwóch stron naraz.
 
-I wiecie, co jest w tym wszystkim najbardziej porażające?
+Z jednej strony widzę tu grzechy projektantów opakowań i detali z tworzyw: zgrzewanie niekompatybilnych polimerów, wtopione metalowe wstawki i etykiety naklejane klejami uniemożliwiającymi recykling. Ktoś zaoszczędził ułamek grosza na etapie produkcji, skazując cenny surowiec na zmarnowanie, bo zignorował zasadę projektowania pod kątem demontażu (*Design for Recycling*).
 
-Ponad 70% tych urządzeń trafiło na cmentarzysko nie dlatego, że ich procesory uległy zużyciu. Trafiły tu z powodu **jednego spuchniętego kondensatora elektrolitycznego wartego 80 groszy, zimnego lutu pod gniazdem zasilania albo celowo zaprojektowanej klejonej obudowy**, której nie da się otworzyć bez zniszczenia całego urządzenia.
+Ale prawdziwy dramat inżynierski zaczyna się wtedy, gdy nagle staje serce zakładu: wielka wytłaczarka lub kruszarka o mocy 160 kW. 
+Rozlega się buczek alarmowy, linia zamiera, a każda minuta postoju generuje gigantyczne straty. Wchodzę do szafy sterowniczej, wyjmuję przemysłowy inwerter lub moduł sterujący, kładę go na stole warsztatowym i zaczynam diagnostykę.
 
-Praca na styku fizycznego recyklingu surowców i automatyki to najlepsza, najbardziej bezwzględna szkoła projektowania systemów, jaką można sobie wyobrazić. Obnaża wszystkie grzechy współczesnego inżynieringu i uczy pokory, która powinna stać się dekalogiem każdego technika, projektanta i programisty.
+I wiecie, co jest w tym wszystkim najbardziej uderzające?
+
+Wielka przemysłowa maszyna za setki tysięcy euro w 80% przypadków nie staje dlatego, że jej silnik uległ mechanicznemu zużyciu, a potężny wał pękł ze starości. Staje z powodu **jednego spuchniętego kondensatora elektrolitycznego wartego 80 groszy w zasilaczu pomocniczym falownika, zimnego lutu pod przetwornicą, zatartego laserem układu scalonego, którego producent celowo nie ujął w DTR, albo zalanego żywicą modułu czujnika, którego nie da się otworzyć bez zniszczenia całej płytki**.
+
+Praca na styku fizycznego przetwórstwa tworzyw i automatyki przemysłowej — a po godzinach przy domowym stole z lutownicą — to najlepsza szkoła projektowania systemów, jaką można sobie wyobrazić. Obnaża wszystkie grzechy współczesnego inżynieringu i uczy pokory, która powinna stać się dekalogiem każdego technika, projektanta i programisty.
 
 ### Grzech pierwszy: Monolit zamiast modułowości
 
 Największą zbrodnią współczesnego projektowania sprzętu jest integracja wszystkiego na jednej, nierozbieralnej płytce drukowanej.
 
-Pamiętam elektronikę sprzed dwudziestu lat: sekcja zasilacza impulsowego była osobną płytką połączoną taśmą z płytą główną i modułem wykonawczym przekaźników. Kiedy przepięcie z sieci uderzyło w warystor i spaliło sekcję wejściową zasilania, technik wykręcał cztery śruby, wymieniał moduł zasilacza za 30 zł i całe urządzenie służyło przez kolejną dekadę.
+Pamiętam elektronikę przemysłową sprzed dwudziestu lat: sekcja zasilacza pomocniczego 24V była osobną płytką połączoną taśmą lub złączem krawędziowym z płytą główną i modułem wykonawczym tranzystorów mocy. Kiedy przepięcie z sieci uderzyło w warystor i spaliło sekcję wejściową zasilania, technik wykręcał cztery śruby, wymieniał moduł zasilacza za kilkadziesiąt złotych i cała linia służyła przez kolejną dekadę.
 
-Dziś? Zasilacz, mikrokontroler, procesor graficzny i przetworniki są zintegrowane w jednym laminacie, zalane żywicą poliuretanową albo zgrzane ultradźwiękami w plastikowej skorupie. Drobne przebicie na diodzie Zenera zamienia całe urządzenie warte kilka tysięcy złotych w bezużyteczny elektrośmieć.
+Dziś? Zasilacz impulsowy, procesor sygnałowy DSP, mikrokontroler i drivery bramek IGBT są upchnięte na jednym wielowarstwowym laminacie, zalane twardą żywicą poliuretanową albo zgrzane w nierozbieralnej plastikowej skorupie. Drobne przebicie na miniaturowej diodzie Zenera lub transilu za 50 groszy zamienia urządzenie warte dwadzieścia tysięcy złotych w bezużyteczny elektrośmieć. A autoryzowany serwis producenta rozkłada ręce: „Nie naprawiamy na poziomie komponentów, moduł wycofany z produkcji, proszę kupić nowy napęd za 25 000 zł, czas oczekiwania: 8 tygodni”.
+
+Dokładnie to samo widzę w strumieniu odpadów PP i PE: zgrzanie na stałe korpusu z polipropylenu z gumowym uszczelnieniem i aluminiowym nitem sprawia, że żadna linia myjąco-separująca nie jest w stanie tego rozdzielić. Projektant stworzył monolit, który z góry skazał materiał na zniszczenie.
 
 Czy w świecie oprogramowania nie robimy dokładnie tego samego?
 
-Ile razy widziałem projekty aplikacji webowych pisane jako monstrualne, splątane monolity. Kod interfejsu wymieszany z logiką biznesową i bezpośrednimi zapytaniami do bazy danych. Wystarczy zmiana jednego API zewnętrznego dostawcy płatności, by cała aplikacja runęła jak domek z kart. 
+Ile razy widziałem projekty aplikacji webowych pisane jako monstrualne, splątane monolity. Kod interfejsu wymieszany z logiką biznesową i bezpośrednimi zapytaniami do bazy danych. Wystarczy zmiana jednego API zewnętrznego dostawcy płatności lub biblioteki autoryzacji, by cała aplikacja runęła jak domek z kart. 
 
 Projektowanie w duchu **Right to Repair (Prawa do Naprawy)** to nie tylko postulat ekologiczny — to fundamentalna zasada czystej architektury. Układ musi być modułowy. Jeśli moduł zasilania (lub moduł uwierzytelniania w kodzie) ulegnie awarii, musi dać się zdiagnozować, odpiąć i wymienić bez niszczenia reszty struktury.
 
-### Grzech drugi: Planowane postarzanie (Planned Obsolescence)
+### Grzech drugi: Planowane postarzanie termiczne (Planned Obsolescence)
 
-Na warsztacie w zakładzie recyklingu niejednokrotnie kładziemy na stole diagnostycznym inwerter fotowoltaiczny renomowanej marki, który zgłasza nieodwracalny błąd wewnętrzny.
+Na warsztacie w zakładzie recyklingu niejednokrotnie kładę na stole diagnostycznym potężny falownik z wytłaczarki lub inwerter renomowanej marki, który nagle zgłasza błąd sprzętowy (*Hardware Fault / Overvoltage*).
 
-Rozbieramy go. Co widzimy?
-Kondensator elektrolityczny o temperaturze pracy do 85°C umieszczony tuż obok potężnego radiatora tranzystorów mocy IGBT, który pod obciążeniem rozgrzewa się do 75°C. Obok jest mnóstwo wolnego, chłodnego miejsca na płycie, ale projektant umieścił ten newralgiczny element dokładnie w strefie maksymalnego piekła termicznego.
+Rozbieram go. Co widzę?
+Kondensator elektrolityczny o temperaturze pracy do 85°C umieszczony dosłownie 5 milimetrów od potężnego aluminiowego radiatora tranzystorów mocy IGBT, który pod stałym obciążeniem silnika ekstrudera rozgrzewa się do 75–80°C. Obok, w tunelu chłodzącym wentylatora, jest mnóstwo wolnego, chłodnego miejsca na płycie. Ale projektant umieścił ten newralgiczny, wrażliwy na ciepło element dokładnie w strefie maksymalnego piekła termicznego.
 
-Prawa fizyki są nieubłagane: podniesienie temperatury pracy kondensatora o każde 10°C skraca jego żywotność o połowę (równanie Arrheniusa). Po trzech latach gwarancji kondensator wysycha, traci pojemność, pojawia się tętnienie napięcia, a procesor blokuje start urządzenia.
+Prawa fizyki są nieubłagane: **równanie Arrheniusa** mówi wprost, że podniesienie temperatury pracy kondensatora elektrolitycznego o każde 10°C skraca jego żywotność o połowę. Po trzech latach ciągłej pracy w zakładzie elektrolit wewnątrz puszki wysycha, kondensator traci pojemność, pojawia się tętnienie napięcia na szynie DC, a procesor blokuje start maszyny.
 
-To nie jest przypadek. To chłodna kalkulacja: zmuśmy klienta do kupienia nowego modelu, bo fabryka musi produkować, a akcjonariusze oczekują wzrostu sprzedaży co kwartał.
+To nie jest przypadek. To chłodna kalkulacja: zmuśmy klienta do zakupu nowego modułu, bo fabryka musi produkować, a akcjonariusze oczekują wzrostu sprzedaży w każdym kwartale.
 
-Kiedy widzę takie rozwiązania, czuję głęboki sprzeciw. Jako rzemieślnik wierzę, że **miarą kunsztu technicznego jest trwałość, a nie zaplanowana data zgonu**. Jeśli projektujesz system — czy to obwód elektroniczny, bazę danych czy procedurę jakościową — Twoim celem powinno być stworzenie czegoś, co przetrwa próbę czasu, a nie rozpadnie się dzień po minięciu okresu gwarancyjnego.
+Kiedy widzę takie rozwiązania, czuję głęboki sprzeciw. Jako rzemieślnik wierzę, że **miarą kunsztu technicznego jest trwałość, margines bezpieczeństwa i odporność, a nie zaplanowana data zgonu**. Jeśli projektujesz system — czy to obwód elektroniczny, formę wtryskową, bazę danych czy procedurę jakościową — Twoim celem powinno być stworzenie czegoś, co przetrwa próbę czasu, a nie rozpadnie się dzień po minięciu okresu gwarancyjnego.
 
-### Grzech trzeci: Blokowanie wiedzy i utrata suwerenności
+### Grzech trzeci: Blokowanie wiedzy i utrata suwerenności (Vendor Lock-in)
 
-Dlaczego tak wiele nowoczesnych maszyn trafia na złom? Ponieważ producenci celowo ukrywają dokumentację techniczną.
+Dlaczego tak wiele nowoczesnych maszyn na zakładach przemysłowych staje się martwymi pomnikami techniki? Ponieważ producenci celowo ukrywają dokumentację techniczną.
 
-Zacieranie laserem oznaczeń na układach scalonych, szyfrowanie protokołów komunikacyjnych, brak publikacji schematów ideowych (DTR) i blokady programowe, które wymagają podłączenia autoryzowanego serwera z chmury producenta, by sparować nowy czujnik z maszyną. Kiedy producent po pięciu latach wycofuje wsparcie dla danego modelu albo ogłasza upadłość, sprawna mechanicznie linia staje się martwym pomnikiem techniki.
+Zacieranie laserem oznaczeń na układach scalonych przetwornic impulsowych, szyfrowanie protokołów komunikacyjnych na magistrali, brak publikacji schematów ideowych w Dokumentacji Techniczno-Ruchowej (DTR) i blokady programowe, które wymagają podłączenia autoryzowanego serwera z chmury producenta, by sparować nowy czujnik ciśnienia stopu z maszyną. Kiedy producent po pięciu latach wycofuje wsparcie dla danego modelu albo podnosi ceny serwisu o 400%, w pełni sprawna mechanicznie linia staje się zakładnikiem korporacji.
 
 Właśnie dlatego na tym blogu tak bezwzględnie podkreślam wagę **otwartych standardów, czystego kodu i posiadania własnego kawałka internetu**:
-* Jeśli stawiasz stronę na zamkniętej platformie społecznościowej, jesteś jak ta maszyna uzależniona od chmury producenta. Wystarczy zmiana regulaminu, by Twoja obecność przestała istnieć.
-* Kiedy używasz czystego HTML-a, otwartego protokołu HTTP, własnej domeny i przejrzystej bazy danych — masz pełną suwerenność. Twój kod uruchomi się za 10, 15 i 20 lat, niezależnie od tego, która korporacja zbankrutuje.
+* Jeśli stawiasz swój biznes wyłącznie na zamkniętej platformie społecznościowej, jesteś jak ta maszyna uzależniona od chmury producenta. Wystarczy zmiana regulaminu lub algorytmu, by Twoja obecność przestała istnieć.
+* Kiedy używasz czystego HTML-a, otwartego protokołu HTTP, własnej domeny i przejrzystej, otwartej bazy danych — masz pełną suwerenność. Twój kod uruchomi się za 10, 15 i 20 lat, niezależnie od tego, która korporacja zbankrutuje lub zmieni cennik.
 
-### 4 lekcje projektowania od technika z recyklingu
+### 4 lekcje projektowania od technika z utrzymania ruchu
 
-Czego uczy góra spalonego krzemu? Jeśli tworzysz cokolwiek — od szafy sterowniczej po aplikację cyfrową:
+Czego uczy codzienna walka z awariami na instalacji recyklingu tworzyw? Jeśli tworzysz cokolwiek — od szafy sterowniczej po aplikację cyfrową:
 
-1. **Projektuj z myślą o demontażu (Design for Disassembly).** Używaj standardowych śrub zamiast kleju. W oprogramowaniu używaj standardowych formatów (JSON, Markdown) zamiast zamkniętych, binarnych baz, których nikt nie odczyta za pięć lat.
-2. **Zostawiaj punkty pomiarowe (Test Points).** Na dobrej płycie drukowanej elektronik ma czytelne pola pomiarowe TP1, TP2 z oznaczeniem napięcia. W swoim kodzie i procesach zostawiaj czytelne logi i metryki diagnostyczne. Nie zmuszaj człowieka przyszłości do zgadywania, co dzieje się w środku układu.
-3. **Szacunek dla zasobów (Frugal Engineering).** Zanim dodasz do projektu kolejną ciężką bibliotekę o wielkości 50 megabajtów albo zażądasz droższego serwera, zoptymalizuj to, co masz. Prawdziwa elegancja to osiągnięcie maksymalnego rezultatu przy minimalnym zużyciu energii i pamięci.
-4. **Prawo do naprawy to prawo do godności.** Urządzenie lub kod, którego nie potrafisz samodzielnie zrozumieć, zdiagnozować i naprawić, tak naprawdę nie należy do Ciebie. Jesteś tylko jego tymczasowym dzierżawcą.
+1. **Projektuj z myślą o demontażu i odzysku (Design for Disassembly & Recycling).** Używaj standardowych połączeń śrubowych zamiast kleju. W tworzywach stosuj jednorodne poliolefiny (czyste PP lub PE) bez wtopionych obcych wtrąceń. W oprogramowaniu używaj standardowych formatów (JSON, Markdown) zamiast zamkniętych, binarnych baz, których nikt nie wyeksportuje za pięć lat.
+2. **Zostawiaj punkty pomiarowe i okna rewizyjne (Test Points & Diagnostics).** Na dobrej płycie drukowanej elektronik ma czytelne pola pomiarowe TP1, TP2 z oznaczeniem napięcia i diody diagnostyczne LED. W swoim kodzie i procesach zostawiaj czytelne logi i metryki diagnostyczne. Nie zmuszaj człowieka przyszłości do zgadywania, co dzieje się w środku układu.
+3. **Szacunek dla zasobów i margines termiczny (Frugal Engineering & Derating).** W elektronice nigdy nie dobieraj komponentów na styk dopuszczalnych temperatur i napięć — zostawiaj margines bezpieczeństwa. W kodzie: zanim dodasz do projektu kolejną ciężką bibliotekę o wielkości 50 megabajtów albo zażądasz droższego serwera, zoptymalizuj to, co masz. Prawdziwa elegancja to osiągnięcie maksymalnej niezawodności przy minimalnym zużyciu energii i pamięci.
+4. **Prawo do naprawy to fundament godności.** Urządzenie, instalacja lub kod, którego nie potrafisz samodzielnie zrozumieć, zdiagnozować i naprawić, tak naprawdę nie należy do Ciebie. Jesteś tylko jego tymczasowym dzierżawcą.
 
-Nie gódźmy się na kulturę jednorazowego plastiku. Niezależnie od tego, czy trzymasz w dłoni lutownicę, czy klawiaturę komputera — buduj rzeczy solidne, rozbieralne i godne zaufania. Przyszłe pokolenia na cmentarzyskach techniki podziękują Ci za każdą przemyślaną decyzję.`,
+Nie gódźmy się na kulturę jednorazowego plastiku — ani w przemyśle opakowaniowym, ani w elektronice, ani w oprogramowaniu. Niezależnie od tego, czy trzymasz w dłoni multimetr, klucz dynamometryczny, czy klawiaturę komputera — buduj rzeczy solidne, rozbieralne i godne zaufania. Przyszłe pokolenia na cmentarzyskach techniki podziękują Ci za każdą przemyślaną decyzję.`,
   },
   {
     id: 14,
